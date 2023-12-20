@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Paint App</title>
+        <meta name="description" content="a small painting app i made" />
+        <link rel="stylesheet" type="text/css" href="styles.css">
+        <script src="main.js" defer></script>
+    </head>
+    <body>
+        <div class="container-main">
+            <div class="container-paint">
+                <div class="container-tools">
+                    <div class="tool-section">
+                        <span class="tool-label">Mode</span>
+                        <div class="tool-section-row">
+                            <button class="paint-button" id="draw" data-active="true" data-group="mode" aria-label="draw mode" onclick="handleButtonInput(this)">Draw</button>
+                            <button class="paint-button" id="erase" data-active="false" data-group="mode" aria-label="erase mode" onclick="handleButtonInput(this)">Erase</button>
+                        </div>
+                    </div>
+                    <div class="tool-section">
+                        <span class="tool-label">Draw size</span>
+                        <div class="tool-section-row" style="gap: 0px;">
+                            <input class="paint-slider" id="draw-size" aria-label="draw size" aria-valuemin="1" aria-valuemax="100" type="range" value="1" min="1" max="100"/>
+                            <span class="paint-value" aria-label="draw size value" id="draw-size-bind">1</span>
+                        </div>
+                    </div>
+                    <div class="tool-section">
+                        <span class="tool-label">Brush Type</span>
+                        <div class="tool-section-row">
+                            <button class="paint-button" id="circle-type" data-active="true" data-group="brush-type" aria-label="circle brush type" onclick="handleButtonInput(this)">Circle</button>
+                            <button class="paint-button" id="square-type" data-active="false" data-group="brush-type" aria-label="square brush type" onclick="handleButtonInput(this)">Square</button>
+                        </div>
+                    </div>
+                    <div class="tool-section hidden">
+                        <span class="tool-label">Blur</span>
+                        <div class="tool-section-row" style="gap: 0px;">
+                            <input class="paint-slider" aria-label="blur size" aria-valuemin="0" aria-valuemax="100" type="range" id="blur-size" value="0" min="0" max="100">
+                            <span class="paint-value" aria-label="blur size value" id="blur-size-bind">1</span>
+                        </div>
+                    </div> 
+                    <div class="tool-section">
+                        <span class="tool-label">Draw color</span>
+                        <div class="tool-section-row" style="width: 100%;">
+                            <input class="paint-color" data-action="draw-color" aria-label="brush color" id="draw-color" type="color" oninput="handleColorInput(this)"/>
+                        </div>
+                    </div>
+                    <div class="tool-section">
+                        <span class="tool-label">Canvas size</span>
+                        <div class="tool-section-row">
+                            <span class="tool-hint">W:</span>
+                            <input class="paint-number-medium" aria-label="canvas width" data-action="canvas-size" id="canvas-size-width" type="number" value="0" min="0" max="7680" oninput="handleNumberInput(this)"/>
+                            <span class="tool-hint">H:</span>
+                            <input class="paint-number-medium" aria-label="canvas height" data-action="canvas-size" id="canvas-size-height" type="number" value="0" min="0" max="4320" oninput="handleNumberInput(this)"/>
+                        </div>
+                    </div>
+                    <p class="tool-section tool-p"><span id="warning" aria-label="warning"></span>Changing canvas size will reset drawing...</p>
+                </div>
+                <canvas width="512" height="512" class="canvas" id="canvas" aria-label="canvas"></canvas>
+            </div>
+        </div>
+    </body>
+</html>
