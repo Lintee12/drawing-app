@@ -9,6 +9,50 @@ body {
     box-sizing: border-box;
 }
 
+.header-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    margin-block-start: 0;
+    margin-block-end: 0;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    padding-inline-start: 0px;
+    gap: 5px;
+    padding-top: 5px;
+    padding-left: 10px;
+    background-color: rgb(56, 53, 255);
+    user-select: none;
+}
+
+.header-list-item {
+    display: flex;
+}
+
+.header-action-button {
+    border: 0;
+    background-color: rgb(56, 53, 255);
+    cursor: pointer;
+    height: 100%;
+    appearance: none;
+    -webkit-appearance: none;
+    color: white;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 400;
+    border: 0;
+    border-radius: 20px;
+    padding: 5px 10px;
+    transition: background-colors .2s ease-in-out;
+}
+
+.header-action-button:hover {
+    background-color: rgb(35, 33, 143);
+    color: white;
+    height: fill;
+}
+
 .container-main {
     width: fit-content;
     display: flex;
@@ -26,6 +70,7 @@ body {
 .container-tools {
     display: flex;
     padding: 10px;
+    padding-top: 5px;
     width: 7680px;
     height: fit-content;
     justify-content: left;
@@ -33,6 +78,7 @@ body {
     gap: 10px;
     background-color: rgb(56, 53, 255);
     border-bottom: 5px solid rgb(32, 33, 36);
+    user-select: none;
 }
 
 .tool-section {
@@ -165,9 +211,22 @@ body {
 .canvas {
     transform-origin: 0 0;
     transition: transform 0.5s ease;
-    position: relative;
-    background-color: rgb(255, 255, 255);
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: transparent; /* Set the background of the main canvas as transparent */
     border: 1px solid gray;
+    }
+
+.grid-canvas {
+    transform-origin: 0 0;
+    transition: transform 0.5s ease;
+    position: absolute;
+    top: 0;
+    left: 0;
+    border: 1px solid gray;
+    background-color: transparent;
+    z-index: -1; /* Put the grid canvas behind the main canvas */
 }
 
 pixel {
