@@ -1,3 +1,4 @@
+"use strict";
 const drawButton = document.getElementById("draw");
 const eraseButton = document.getElementById("erase");
 
@@ -34,6 +35,7 @@ let drawColor = [0, 0, 0];
 let brushType = 0;
 
 let blobs = 0;
+let isDrawing;
 
 const defaultCanvas = [512, 512];
 
@@ -47,6 +49,8 @@ const defaultCanvas = [512, 512];
 function hexTorgb(hex) { //convert hex to rgb value
   return ['0x' + hex[1] + hex[2] | 0, '0x' + hex[3] + hex[4] | 0, '0x' + hex[5] + hex[6] | 0];
 }
+
+const clamp = (val, min, max) => Math.min(Math.max(val, min), max)
 
 //load values from storage
 window.onload = () => {
@@ -85,6 +89,50 @@ window.onload = () => {
 
     initCanvas();
 }
+
+//canvas zoom
+let scaleFactor = 1.0;
+let zoomIncrement = 0.1;
+let zoomTimeout;
+
+canvas.addEventListener('wheel', function(event) {
+  event.preventDefault(); // Prevent default scroll behavior
+
+  if (event.deltaY < 0) {
+      // Scrolling up, zoom in
+      scaleFactor += zoomIncrement;
+  } else {
+      // Scrolling down, zoom out
+      if (scaleFactor > zoomIncrement) {
+          scaleFactor -= zoomIncrement;
+      }
+  }
+
+  applyZoom();
+});
+
+function zoomIn() {
+    scaleFactor += zoomIncrement;
+    applyZoom();
+    zoomTimeout = setTimeout(zoomIn, 100);
+}
+
+function zoomOut() {
+    if (scaleFactor > zoomIncrement) {
+        scaleFactor -= zoomIncrement;
+        applyZoom();
+        zoomTimeout = setTimeout(zoomOut, 100);
+    }
+}
+
+function stopZoom() {
+    clearTimeout(zoomTimeout);
+}
+
+function applyZoom() {
+    canvas.style.transform = `scale(${clamp(scaleFactor, 0.1, 100)})`;
+}
+//end canvas zoom
 
 //draw size slider
 drawSizeSlider.oninput = function() {

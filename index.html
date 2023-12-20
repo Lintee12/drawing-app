@@ -71,7 +71,14 @@
                     </div>
                     <p class="tool-section tool-p"><span id="warning" aria-label="warning"></span>Changing canvas size will reset drawing...</p>
                 </div>
-                <canvas width="512" height="512" class="canvas" id="canvas" aria-label="canvas"></canvas>
+                <!-- <canvas width="512" height="512" class="canvas" id="canvas" aria-label="canvas"></canvas> -->
+                <div class="canvas-zoom">
+                    <canvas width="512" height="512" class="canvas" id="canvas" aria-label="canvas"></canvas>
+                </div>
+                <div class="zoom-controls">
+                    <button class="paint-button" style="width: 40px;" onmousedown="zoomIn()" onmouseup="stopZoom()" onmouseleave="stopZoom()">+</button>
+                    <button class="paint-button" style="width: 40px;" onmousedown="zoomOut()" onmouseup="stopZoom()" onmouseleave="stopZoom()">-</button>
+                </div>
             </div>
         </div>
     </body>
