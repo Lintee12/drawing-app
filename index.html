@@ -6,6 +6,7 @@
         <title>Paint App</title>
         <meta name="description" content="a small painting app i made" />
         <link rel="stylesheet" type="text/css" href="styles.css">
+        <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
         <script src="main.js" defer></script>
     </head>
     <body>
@@ -44,6 +45,19 @@
                         <span class="tool-label">Draw color</span>
                         <div class="tool-section-row" style="width: 100%;">
                             <input class="paint-color" data-action="draw-color" aria-label="brush color" id="draw-color" type="color" oninput="handleColorInput(this)"/>
+                        </div>
+                    </div>
+                    <div class="tool-section">
+                        <span class="tool-label">Background color</span>
+                        <div class="tool-section-row" style="width: 100%;">
+                            <input class="paint-color" data-action="background-color" aria-label="background color" id="background-color" type="color" oninput="handleColorInput(this)"/>
+                        </div>
+                    </div>
+                    <div class="tool-section">
+                        <span class="tool-label">Background alpha</span>
+                        <div class="tool-section-row" style="width: 100%;">
+                            <input class="paint-slider" id="bg-alpha-size" aria-label="background alpha size" aria-valuemin="0" aria-valuemax="1" type="range" value="1" step="0.01" min="0" max="1"/>
+                            <span class="paint-value" aria-label="background alpha size value" id="bg-alpha-size-bind">1</span>
                         </div>
                     </div>
                     <div class="tool-section">

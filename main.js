@@ -4,11 +4,18 @@ const eraseButton = document.getElementById("erase");
 const drawSizeSlider = document.getElementById("draw-size");
 const drawSizeBind = document.getElementById("draw-size-bind");
 
+const bgAlphaSizeSlider = document.getElementById("bg-alpha-size");
+const bgAlphaSizeBind = document.getElementById("bg-alpha-size-bind");
+
 drawSizeSlider.value = 18;
 drawSizeSlider.value = localStorage.getItem("drawSize");
 let drawSize = localStorage.getItem("drawSize");
-drawSizeBind.innerHTML = drawSizeSlider.value;
 
+bgAlphaSizeSlider.value = 1;
+bgAlphaSizeSlider.value = localStorage.getItem("bgAlphaSize");
+let bgAlphaSize = localStorage.getItem("bgAlphaSize");
+
+//blur
 const blurSizeSlider = document.getElementById("blur-size");
 const blurSizeBind = document.getElementById("blur-size-bind");
 
@@ -16,6 +23,7 @@ blurSizeSlider.value = 0;
 blurSizeSlider.value = localStorage.getItem("blurSize");
 let blurSize = localStorage.getItem("blurSize");
 blurSizeBind.innerHTML = blurSizeSlider.value;
+//end blur
 
 const canvas = document.getElementById("canvas");
 
@@ -32,6 +40,8 @@ const defaultCanvas = [512, 512];
 //MAKE BACKGROUND FILL WITH WHITE IF ALPHA MODE NOT ON IF ALPHA MODE ON LEAVE AS IS AND MAKE ERASE SET BACKGROUUND TO TRASNPARENT
 //MAKE TOOLBAR SCROLL
 
+//CHANGING BACKGROUND COLOR WHEN CANVAS HAS A LOT OF SHAPES IS NOT GOOD AT ALL
+
 //NEXT: undo feature and background color change
 
 function hexTorgb(hex) { //convert hex to rgb value
@@ -46,19 +56,34 @@ window.onload = () => {
     canvas.width = defaultCanvas[0];
     canvas.height = defaultCanvas[1];
 
+    if(localStorage.getItem("drawSize") == null) localStorage.setItem("drawSize", 18)
+    drawSizeSlider.value = localStorage.getItem("drawSize");
+    drawSizeBind.innerHTML = drawSizeSlider.value;
+
+    if(localStorage.getItem("bgAlphaSize") == null) localStorage.setItem("bgAlphaSize", 18)
+    bgAlphaSizeSlider.value = localStorage.getItem("bgAlphaSize");
+    bgAlphaSizeBind.innerHTML = bgAlphaSizeSlider.value;
+
     if(localStorage.getItem("drawColor") == null) {localStorage.setItem("drawColor", '#000000');}
     document.getElementById("draw-color").value = localStorage.getItem("drawColor");
     drawColor = hexTorgb(localStorage.getItem("drawColor"));
     console.log(drawColor);
+
+    if(localStorage.getItem("backgroundColor") == null) {localStorage.setItem("backgroundColor", '#FFFFFF');}
+    document.getElementById("background-color").value = localStorage.getItem("backgroundColor");
+    backgroundColor = hexTorgb(localStorage.getItem("backgroundColor"));
+    console.log(backgroundColor);
 
 
     if(localStorage.getItem("draw") == null) localStorage.setItem("draw", true);
     if(localStorage.getItem("draw") == 'true') handleButtonInput(document.getElementById("draw"));
     if(localStorage.getItem("draw") == 'false') handleButtonInput(document.getElementById("erase"));
 
-    if(localStorage.getItem("brushType") == null) localStorage.setItem("brushType", 1);
+    if(localStorage.getItem("brushType") == null) localStorage.setItem("brushType", 0);
     if(localStorage.getItem("brushType") == 0) handleButtonInput(document.getElementById("circle-type"));
     if(localStorage.getItem("brushType") == 1) handleButtonInput(document.getElementById("square-type"));
+
+    initCanvas();
 }
 
 //draw size slider
@@ -75,6 +100,18 @@ blurSizeSlider.oninput = function() {
     blurSize = this.value;
     localStorage.setItem("blurSize", this.value);
     blurSizeSlider.setAttribute("value", this.value);
+}
+
+//bg alpha size slider
+bgAlphaSizeSlider.oninput = function() {
+  bgAlphaSizeBind.innerHTML = this.value;
+  bgAlphaSize = this.value;
+  localStorage.setItem("bgAlphaSize", this.value);
+  bgAlphaSizeSlider.setAttribute("value", this.value);
+}
+
+bgAlphaSizeSlider.onchange = function() {
+  initCanvas();
 }
 
 //handle button inputs
@@ -129,15 +166,44 @@ function handleNumberInput(input) {
     }
 }
 
+let colorChangingTimeout;
+
+function handleBackgroundColorChange(input) {
+  if (input.dataset.action === 'background-color') {
+    clearTimeout(colorChangingTimeout);
+
+    colorChangingTimeout = setTimeout(() => {
+      backgroundColor = hexTorgb(input.value);
+      localStorage.setItem("backgroundColor", input.value);
+      initCanvas();
+    }, 300);
+  }
+}
+
 function handleColorInput(input) {
-  if(input.dataset.action === 'draw-color') {
+  if (input.dataset.action === 'draw-color') {
     drawColor = hexTorgb(input.value);
     localStorage.setItem("drawColor", input.value);
   }
+
+  handleBackgroundColorChange(input);
 }
+
+const colorInputs = document.querySelectorAll('.paint-color');
+colorInputs.forEach(input => {
+  input.addEventListener('input', () => {
+    handleColorInput(input);
+  });
+
+  input.addEventListener('change', () => {
+    handleColorInput(input);
+  });
+});
   
 //start canvas logic
 const ctx = canvas.getContext("2d");
+
+let drawnContent = [];
 
 const devicePixelRatio = window.devicePixelRatio || 1;
 const backingStoreRatio = ctx.webkitBackingStorePixelRatio ||
@@ -177,7 +243,33 @@ function spawnCircle(locationX, locationY, size) {
     default:
       break;
   }
+  storeDrawnShape(locationX, locationY, drawSize, ctx.fillStyle, 'circle');
   ctx.fill();
+}
+
+function clearCanvas(color, alpha) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.globalAlpha = alpha; // Set the transparency value
+  ctx.fillStyle = color;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Redraw the stored content on top of the new background
+  ctx.globalAlpha = 1; // Reset the transparency for the stored content
+  drawnContent.forEach(shape => {
+    ctx.fillStyle = shape.color;
+    if (shape.type === 'circle') {
+      ctx.beginPath();
+      ctx.arc(shape.x, shape.y, shape.size / 2, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (shape.type === 'square') {
+      ctx.fillRect(shape.x - shape.size / 2, shape.y - shape.size / 2, shape.size, shape.size);
+    }
+  });
+}
+
+const initCanvas = () => {
+  clearCanvas(`rgb(${backgroundColor[0]}, ${backgroundColor[1]}, ${backgroundColor[2]})`, bgAlphaSize);
+  console.log("Canvas initialized");
 }
 
 function updateDisplay(event) {
@@ -209,10 +301,23 @@ canvas.addEventListener("mouseup", (event) => {
     updateDisplay(event);
   }
 });
-  
+
+const throttledUpdateDisplay = _.throttle(updateDisplay, 0);
+
 canvas.addEventListener("mousemove", (event) => {
-    if (event.buttons === 1) {
-      updateDisplay(event);
-    }
+  if (event.buttons === 1) {
+    throttledUpdateDisplay(event);
+  }
 });
+
+function storeDrawnShape(locationX, locationY, size, color, type) {
+  drawnContent.push({
+    x: locationX,
+    y: locationY,
+    size: size,
+    color: color,
+    type: type
+  });
+}
+initCanvas();
 //end canvas logic
