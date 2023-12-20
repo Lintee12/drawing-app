@@ -1,4 +1,0 @@
-color picker
-draw size
-eraser
-change background color
