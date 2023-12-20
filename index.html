@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-    <html lang="en">
+    <html lang="en" id="scrollableDiv">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,8 +8,9 @@
         <link rel="stylesheet" type="text/css" href="styles.css">
         <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
         <script src="main.js" defer></script>
+        <script src="accessibility.js" defer></script>
     </head>
-    <body>
+    <body id="scrollableContent">
         <header>
             <nav>
                 <ul class="header-list">
@@ -87,7 +88,7 @@
                     <p class="tool-section tool-p"><span title="alert" role="alert" id="warning" aria-label="warning"></span>Changing canvas size will reset drawing...</p>
                 </div>
                 <!-- <canvas width="512" height="512" class="canvas" id="canvas" aria-label="canvas"></canvas> -->
-                <div class="canvas-zoom">
+                <div class="canvas-zoom" id="scrollableContent">
                     <canvas width="512" height="512" class="grid-canvas" id="grid-canvas" aria-label="canvas"></canvas>
                     <canvas width="512" height="512" class="canvas" id="canvas" aria-label="canvas"></canvas>
                 </div>

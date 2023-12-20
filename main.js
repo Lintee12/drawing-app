@@ -44,7 +44,9 @@ const defaultCanvas = [512, 512];
 
 //CHANGING BACKGROUND COLOR WHEN CANVAS HAS A LOT OF SHAPES IS NOT GOOD AT ALL
 
-//NEXT: undo feature and background color change
+//NEXT: undo feature
+
+//REMOVE OR FIX UNUSED FEATURES
 
 function hexTorgb(hex) { //convert hex to rgb value
   return ['0x' + hex[1] + hex[2] | 0, '0x' + hex[3] + hex[4] | 0, '0x' + hex[5] + hex[6] | 0];
@@ -92,7 +94,15 @@ window.onload = () => {
 }
 
 const handleHeaderAction = (action) => {
-  console.log(action)
+  switch (action) {
+    case 'file':
+      saveCanvasAsImage();
+      break;
+  
+    default:
+      console.log(action);
+      break;
+  }
 }
 
 //canvas zoom
@@ -101,13 +111,13 @@ let zoomIncrement = 0.1;
 let zoomTimeout;
 
 canvas.addEventListener('wheel', function(event) {
-  event.preventDefault(); // Prevent default scroll behavior
+  event.preventDefault();
 
   if (event.deltaY < 0) {
-      // Scrolling up, zoom in
+      //zoom in
       scaleFactor += zoomIncrement;
   } else {
-      // Scrolling down, zoom out
+      //zoom out
       if (scaleFactor > zoomIncrement) {
           scaleFactor -= zoomIncrement;
       }
@@ -139,6 +149,18 @@ function applyZoom() {
     gridCanvas.style.transform = `scale(${clamp(scaleFactor, 0.1, 100)})`;
 }
 //end canvas zoom
+
+function saveCanvasAsImage() {
+  const canvas = document.getElementById('canvas');
+  
+  const dataURL = canvas.toDataURL('image/png');
+
+  const link = document.createElement('a');
+  link.download = 'image.png';
+  link.href = dataURL;
+
+  link.click();
+}
 
 //draw size slider
 drawSizeSlider.oninput = function() {
@@ -207,7 +229,7 @@ function handleNumberInput(input) {
     input.setAttribute("value", numericValue);
   }
 
-  // Handle canvas size change
+  //handle canvas size change
   if (input.dataset.action === "canvas-size") {
     if (input.id === "canvas-size-width") {
       canvas.style.width = `${input.value}px`;
@@ -222,7 +244,6 @@ function handleNumberInput(input) {
       gridCanvas.height = input.value;
     }
 
-    // Redraw the grid
     redrawGrid();
   }
 }
@@ -230,14 +251,13 @@ function handleNumberInput(input) {
 function redrawGrid() {
   const ctx = gridCanvas.getContext("2d");
 
-  // Set up the grid pattern
-  const gridSize = 20; // Change this value according to your grid size
+  const gridSize = 20;
   const numCols = Math.ceil(gridCanvas.width / gridSize);
   const numRows = Math.ceil(gridCanvas.height / gridSize);
 
   ctx.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
-  ctx.fillStyle = "#ccc"; // Color for the grid pattern
-  ctx.globalAlpha = 0.2; // Set the transparency for the grid
+  ctx.fillStyle = "#ccc"; //grid color
+  ctx.globalAlpha = 0.2;
 
   for (let col = 0; col < numCols; col++) {
     for (let row = 0; row < numRows; row++) {
@@ -247,9 +267,8 @@ function redrawGrid() {
     }
   }
 
-  ctx.globalAlpha = 1; // Reset the alpha value
+  ctx.globalAlpha = 1; //reset the alpha value
 }
-
 
 let colorChangingTimeout;
 
@@ -270,7 +289,6 @@ function handleColorInput(input) {
     drawColor = hexTorgb(input.value);
     localStorage.setItem("drawColor", input.value);
   }
-
   handleBackgroundColorChange(input);
 }
 
@@ -326,8 +344,8 @@ function spawnCircle(locationX, locationY, size) {
   blobs++;
 
   if (!draw) {
-    ctx.globalCompositeOperation = 'destination-out'; // Use destination-out to erase
-    ctx.fillStyle = 'rgba(0, 0, 0, 1)'; // Fill style is irrelevant for erasing
+    ctx.globalCompositeOperation = 'destination-out'; //for erase
+    ctx.fillStyle = 'rgba(0, 0, 0, 1)'; //eraase is transparent right now
 
     switch (brushType) {
       case 0:
@@ -343,7 +361,7 @@ function spawnCircle(locationX, locationY, size) {
         break;
     }
     
-    ctx.globalCompositeOperation = 'source-over'; // Reset composite operation for normal drawing
+    ctx.globalCompositeOperation = 'source-over'; //normal drawiing
   } else {
     ctx.fillStyle = `rgba(${drawColor[0]}, ${drawColor[1]}, ${drawColor[2]}, ${bgAlphaSize})`;
     
@@ -365,17 +383,17 @@ function spawnCircle(locationX, locationY, size) {
 }
 
 function clearCanvas(color, alpha) {
-  // Clear the canvas
+  //clear canvas
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Draw the background and the stored non-erased content
+  //draw the background and the stored non-erased content
   ctx.globalAlpha = alpha;
   ctx.fillStyle = color;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  ctx.globalAlpha = 1; // Reset alpha for drawing shapes
+  ctx.globalAlpha = 1;
 
-  // Redraw only non-erased content on top of the new background
+  //redraw only non-erased content on top of the new background
   drawnContent.forEach(shape => {
     if (!shape.isErase) {
       ctx.fillStyle = shape.color;
@@ -391,7 +409,7 @@ function clearCanvas(color, alpha) {
 }
 
 const initCanvas = () => {
-  clearCanvas(`rgba(0, 0, 0, 0)`, bgAlphaSize); // Set transparent background
+  clearCanvas(`rgba(0, 0, 0, 0)`, bgAlphaSize); //make transparent background
   console.log("Canvas initialized");
 }
 
@@ -412,14 +430,14 @@ function updateDisplay(event) {
 }
 
 canvas.addEventListener("mousedown", (event) => {
-    if (event.button === 0) { //left mouse button (button index 0)
+    if (event.button === 0) { //left mouse button
       isDrawing = true;
       updateDisplay(event);
     }
 });
 
 canvas.addEventListener("mouseup", (event) => {
-  if (event.button === 0) { //left mouse button (button index 0)
+  if (event.button === 0) { //left mouse button
     isDrawing = false;
     updateDisplay(event);
   }
@@ -440,18 +458,17 @@ function storeDrawnShape(locationX, locationY, size, color, type, isErase) {
     size: size,
     color: color,
     type: type,
-    isErase: isErase // Include an indicator for erasures
+    isErase: isErase //shape is eraseer
   });
 }
 
-// Function to draw the alpha grid
 function drawAlphaGrid() {
-  const gridSize = 20; // Size of each grid square
+  const gridSize = 20; //for grid square
   const numCols = Math.ceil(gridCanvas.width / gridSize);
   const numRows = Math.ceil(gridCanvas.height / gridSize);
 
   ctxGrid.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
-  ctxGrid.fillStyle = 'rgba(204, 204, 204, 0.2)'; // Color and transparency for the grid pattern
+  ctxGrid.fillStyle = 'rgba(204, 204, 204, 0.2)'; //fill for the grid pattern
 
   for (let col = 0; col < numCols; col++) {
     for (let row = 0; row < numRows; row++) {
@@ -461,8 +478,5 @@ function drawAlphaGrid() {
     }
   }
 }
-
-// Call the function to draw the alpha grid
 drawAlphaGrid();
 initCanvas();
-//end canvas logic

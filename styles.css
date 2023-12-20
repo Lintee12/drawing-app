@@ -24,6 +24,7 @@ body {
     padding-left: 10px;
     background-color: rgb(56, 53, 255);
     user-select: none;
+    width: 7680px;
 }
 
 .header-list-item {
