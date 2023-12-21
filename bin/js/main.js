@@ -1,56 +1,23 @@
 "use strict";
+//to add: loading images from computer to edit, more hotkeys, pixel art mode(no AA), brush preview(working on)
 const drawButton = document.getElementById("draw");
 const eraseButton = document.getElementById("erase");
 
 const drawSizeSlider = document.getElementById("draw-size");
 const drawSizeBind = document.getElementById("draw-size-bind");
 
-const bgAlphaSizeSlider = document.getElementById("bg-alpha-size");
-const bgAlphaSizeBind = document.getElementById("bg-alpha-size-bind");
-
-drawSizeSlider.value = 18;
-drawSizeSlider.value = localStorage.getItem("drawSize");
-let drawSize = localStorage.getItem("drawSize");
-
-bgAlphaSizeSlider.value = 1;
-bgAlphaSizeSlider.value = localStorage.getItem("bgAlphaSize");
-let bgAlphaSize = localStorage.getItem("bgAlphaSize");
-
-//blur
-const blurSizeSlider = document.getElementById("blur-size");
-const blurSizeBind = document.getElementById("blur-size-bind");
-
-blurSizeSlider.value = 0;
-blurSizeSlider.value = localStorage.getItem("blurSize");
-let blurSize = localStorage.getItem("blurSize");
-blurSizeBind.innerHTML = blurSizeSlider.value;
-//end blur
-
 const canvas = document.getElementById("canvas");
+const gridCanvas = document.getElementById('grid-canvas');
+const defaultCanvas = [512, 512];
 
 let draw = true;
-
-let backgroundColor = [255, 255, 255];
-let drawColor = [0, 0, 0];
+let drawSize = localStorage.getItem("drawSize");
 let brushType = 0;
+let drawColor = [0, 0, 0];
+let mainAlphaSize = 255;
 
 let blobs = 1;
 let isDrawing;
-
-const defaultCanvas = [512, 512];
-
-//MAKE BACKGROUND FILL WITH WHITE IF ALPHA MODE NOT ON IF ALPHA MODE ON LEAVE AS IS AND MAKE ERASE SET BACKGROUUND TO TRASNPARENT
-//MAKE TOOLBAR SCROLL
-
-//NEXT: undo feature
-
-//REMOVE OR FIX UNUSED FEATURES
-
-function hexTorgb(hex) { //convert hex to rgb value
-  return ['0x' + hex[1] + hex[2] | 0, '0x' + hex[3] + hex[4] | 0, '0x' + hex[5] + hex[6] | 0];
-}
-
-const clamp = (val, min, max) => Math.min(Math.max(val, min), max)
 
 //load values from storage
 window.onload = () => {
@@ -65,20 +32,10 @@ window.onload = () => {
     drawSizeSlider.value = localStorage.getItem("drawSize");
     drawSizeBind.innerHTML = drawSizeSlider.value;
 
-    if(localStorage.getItem("bgAlphaSize") == null) localStorage.setItem("bgAlphaSize", 1)
-    bgAlphaSizeSlider.value = localStorage.getItem("bgAlphaSize");
-    bgAlphaSizeBind.innerHTML = bgAlphaSizeSlider.value;
-
     if(localStorage.getItem("drawColor") == null) {localStorage.setItem("drawColor", '#000000');}
     document.getElementById("draw-color").value = localStorage.getItem("drawColor");
     drawColor = hexTorgb(localStorage.getItem("drawColor"));
     console.log(drawColor);
-
-    if(localStorage.getItem("backgroundColor") == null) {localStorage.setItem("backgroundColor", '#FFFFFF');}
-    document.getElementById("background-color").value = localStorage.getItem("backgroundColor");
-    backgroundColor = hexTorgb(localStorage.getItem("backgroundColor"));
-    console.log(backgroundColor);
-
 
     if(localStorage.getItem("draw") == null) localStorage.setItem("draw", true);
     if(localStorage.getItem("draw") == 'true') handleButtonInput(document.getElementById("draw"));
@@ -93,70 +50,7 @@ window.onload = () => {
         menu.style.display = 'none';
     });
     initCanvas();
-}
-
-let transactionHistory = []; // Array to save transaction history
-let redoHistory = []; // Array to save undone transactions
-
-function pushTransaction(action, element) {
-  transactionHistory.push({ action, element });
-}
-
-function undo() {
-  if (transactionHistory.length > 0) {
-    const lastAction = transactionHistory.pop();
-    if (lastAction.action === 'add') {
-      const elementToRemove = lastAction.element;
-      const indexToRemove = drawnContent.findIndex(element => JSON.stringify(element) === JSON.stringify(elementToRemove));
-      if (indexToRemove !== -1) {
-        drawnContent.splice(indexToRemove, 1);
-        redoHistory.push(lastAction);
-        console.log("Element removed:", elementToRemove);
-      }
-    } else if (lastAction.action === 'remove') {
-      drawnContent.push(lastAction.element);
-      redoHistory.push(lastAction);
-      console.log("Element added:", lastAction.element);
-    }
-    initCanvas();
-  } else {
-    console.log("Nothing to undo");
-  }
-}
-
-function redo() {
-  if (redoHistory.length > 0) {
-    const lastUndoneAction = redoHistory.pop();
-    if (lastUndoneAction.action === 'add') {
-      drawnContent.push(lastUndoneAction.element);
-      transactionHistory.push(lastUndoneAction);
-      console.log("Redo element added:", lastUndoneAction.element);
-    } else if (lastUndoneAction.action === 'remove') {
-      const elementToRemove = lastUndoneAction.element;
-      const indexToRemove = drawnContent.findIndex(element => JSON.stringify(element) === JSON.stringify(elementToRemove));
-      if (indexToRemove !== -1) {
-        drawnContent.splice(indexToRemove, 1);
-        transactionHistory.push(lastUndoneAction);
-        console.log("Redo element removed:", elementToRemove);
-      }
-    }
-    initCanvas();
-    blobs = drawnContent.length + 1;
-  } else {
-    console.log("Nothing to redo");
-  }
-}
-
-function addTransaction(locationX, locationY, size, color, type, isErase) {
-  const element = {
-    x: locationX,
-    y: locationY,
-    size: size,
-    color: color,
-    type: type,
-    isErase: isErase
-  };
-  pushTransaction('add', element);
+    redrawGrid();
 }
 
 const handleHeaderAction = (action) => {
@@ -229,53 +123,7 @@ const hideMenu = (event) => {
   event.target.style.display = 'none';
 }
 
-//canvas zoom
-let scaleFactor = 1.0;
-let zoomIncrement = 0.1;
-let zoomTimeout;
-
-canvas.addEventListener('wheel', function(event) {
-  event.preventDefault();
-
-  if (event.deltaY < 0) {
-      //zoom in
-      scaleFactor += zoomIncrement;
-  } else {
-      //zoom out
-      if (scaleFactor > zoomIncrement) {
-          scaleFactor -= zoomIncrement;
-      }
-  }
-
-  applyZoom();
-});
-
-function zoomIn() {
-    scaleFactor += zoomIncrement;
-    applyZoom();
-    zoomTimeout = setTimeout(zoomIn, 100);
-}
-
-function zoomOut() {
-    if (scaleFactor > zoomIncrement) {
-        scaleFactor -= zoomIncrement;
-        applyZoom();
-        zoomTimeout = setTimeout(zoomOut, 100);
-    }
-}
-
-function stopZoom() {
-    clearTimeout(zoomTimeout);
-}
-
-function applyZoom() {
-    canvas.style.transform = `scale(${clamp(scaleFactor, 0.1, 100)})`;
-    gridCanvas.style.transform = `scale(${clamp(scaleFactor, 0.1, 100)})`;
-}
-//end canvas zoom
-
 document.addEventListener('keydown', function(event) {
-  // Check if Ctrl+S (or Command+S for Mac) is pressed
   if ((event.ctrlKey || event.metaKey) && event.key === 's') {
     event.preventDefault();
     saveCanvasAsImage();
@@ -300,26 +148,6 @@ drawSizeSlider.oninput = function() {
     drawSize = this.value;
     localStorage.setItem("drawSize", this.value);
     drawSizeSlider.setAttribute("value", this.value);
-}
-
-//blur size slider
-blurSizeSlider.oninput = function() {
-    blurSizeBind.innerHTML = this.value;
-    blurSize = this.value;
-    localStorage.setItem("blurSize", this.value);
-    blurSizeSlider.setAttribute("value", this.value);
-}
-
-//bg alpha size slider
-bgAlphaSizeSlider.oninput = function() {
-  bgAlphaSizeBind.innerHTML = this.value;
-  bgAlphaSize = this.value;
-  localStorage.setItem("bgAlphaSize", this.value);
-  bgAlphaSizeSlider.setAttribute("value", this.value);
-}
-
-bgAlphaSizeSlider.onchange = function() {
-  initCanvas();
 }
 
 //handle button inputs
@@ -375,20 +203,32 @@ function handleNumberInput(input) {
       gridCanvas.style.height = `${input.value}px`;
       gridCanvas.height = input.value;
     }
-
     redrawGrid();
   }
 }
 
+function fix_dpi() {
+  let dpi = window.devicePixelRatio;
+  let style_height = +getComputedStyle(canvas).getPropertyValue("height").slice(0, -2);
+  let style_width = +getComputedStyle(canvas).getPropertyValue("width").slice(0, -2);
+
+  canvas.setAttribute('height', style_height * dpi);
+  canvas.setAttribute('width', style_width * dpi);
+  gridCanvas.setAttribute('height', style_height * dpi);
+  gridCanvas.setAttribute('width', style_width * dpi);
+}
+
 function redrawGrid() {
-  const ctx = gridCanvas.getContext("2d");
+  fix_dpi();
+  const gridSize = 16;
+  const numCols = Math.ceil(canvas.width / gridSize);
+  const numRows = Math.ceil(canvas.height / gridSize);
 
-  const gridSize = 20;
-  const numCols = Math.ceil(gridCanvas.width / gridSize);
-  const numRows = Math.ceil(gridCanvas.height / gridSize);
+  // Prevent anti-aliasing for sharp pixel rendering
+  ctx.imageSmoothingEnabled = false;
 
-  ctx.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
-  ctx.fillStyle = "#ccc"; //grid color
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#ccc"; // Grid color
   ctx.globalAlpha = 0.2;
 
   for (let col = 0; col < numCols; col++) {
@@ -399,29 +239,14 @@ function redrawGrid() {
     }
   }
 
-  ctx.globalAlpha = 1; //reset the alpha value
-}
-
-let colorChangingTimeout;
-
-function handleBackgroundColorChange(input) {
-  if (input.dataset.action === 'background-color') {
-    clearTimeout(colorChangingTimeout);
-
-    colorChangingTimeout = setTimeout(() => {
-      backgroundColor = hexTorgb(input.value);
-      localStorage.setItem("backgroundColor", input.value);
-      initCanvas();
-    }, 300);
-  }
+  ctx.globalAlpha = 1; // Reset the alpha value
 }
 
 function handleColorInput(input) {
   if (input.dataset.action === 'draw-color') {
     drawColor = hexTorgb(input.value);
     localStorage.setItem("drawColor", input.value);
-  }
-  handleBackgroundColorChange(input);
+  };
 }
 
 const colorInputs = document.querySelectorAll('.paint-color');
@@ -437,7 +262,6 @@ colorInputs.forEach(input => {
   
 //start canvas logic
 const ctx = canvas.getContext("2d");
-const gridCanvas = document.getElementById('grid-canvas');
 const ctxGrid = gridCanvas.getContext('2d');
 
 let drawnContent = [];
@@ -497,7 +321,7 @@ function spawnCircle(locationX, locationY, size) {
     ctx.globalCompositeOperation = 'source-over'; //normal drawiing
   } 
   else {
-    ctx.fillStyle = `rgba(${drawColor[0]}, ${drawColor[1]}, ${drawColor[2]}, ${bgAlphaSize})`;
+    ctx.fillStyle = `rgba(${drawColor[0]}, ${drawColor[1]}, ${drawColor[2]}, ${mainAlphaSize})`;
     
     switch (brushType) {
       case 0:
@@ -546,7 +370,7 @@ function clearCanvas(color, alpha) {
 }
 
 const initCanvas = () => {
-  clearCanvas(`rgba(0, 0, 0, 0)`, bgAlphaSize); //make transparent background
+  clearCanvas(`rgba(0, 0, 0, 0)`, mainAlphaSize); //make transparent background
   console.log("Canvas initialized");
   blobs = drawnContent.length + 1;
 }
@@ -562,7 +386,7 @@ function updateDisplay(event) {
     spawnCircle(mousePos.x, mousePos.y, drawSize);
   } 
   else {
-    ctx.fillStyle = `rgba(${backgroundColor[0]}, ${backgroundColor[1]}, ${backgroundColor[2]}, ${bgAlphaSize})`;
+    ctx.fillStyle = `rgba(255, 255, 255, ${mainAlphaSize})`;
     spawnCircle(mousePos.x, mousePos.y, drawSize);
   } 
 }
@@ -599,22 +423,3 @@ function storeDrawnShape(locationX, locationY, size, color, type, isErase) {
     isErase: isErase //shape is eraseer
   });
 }
-
-function drawAlphaGrid() {
-  const gridSize = 20; //for grid square
-  const numCols = Math.ceil(gridCanvas.width / gridSize);
-  const numRows = Math.ceil(gridCanvas.height / gridSize);
-
-  ctxGrid.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
-  ctxGrid.fillStyle = 'rgba(204, 204, 204, 0.2)'; //fill for the grid pattern
-
-  for (let col = 0; col < numCols; col++) {
-    for (let row = 0; row < numRows; row++) {
-      if ((col + row) % 2 === 0) {
-        ctxGrid.fillRect(col * gridSize, row * gridSize, gridSize, gridSize);
-      }
-    }
-  }
-}
-drawAlphaGrid();
-initCanvas();
