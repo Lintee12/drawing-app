@@ -7,7 +7,6 @@ const drawSizeSlider = document.getElementById("draw-size");
 const drawSizeBind = document.getElementById("draw-size-bind");
 
 const canvas = document.getElementById("canvas");
-const gridCanvas = document.getElementById('grid-canvas');
 const defaultCanvas = [512, 512];
 
 let draw = true;
@@ -207,28 +206,15 @@ function handleNumberInput(input) {
   }
 }
 
-function fix_dpi() {
-  let dpi = window.devicePixelRatio;
-  let style_height = +getComputedStyle(canvas).getPropertyValue("height").slice(0, -2);
-  let style_width = +getComputedStyle(canvas).getPropertyValue("width").slice(0, -2);
-
-  canvas.setAttribute('height', style_height * dpi);
-  canvas.setAttribute('width', style_width * dpi);
-  gridCanvas.setAttribute('height', style_height * dpi);
-  gridCanvas.setAttribute('width', style_width * dpi);
-}
-
 function redrawGrid() {
-  fix_dpi();
+  const ctx = gridCanvas.getContext("2d");
+
   const gridSize = 16;
-  const numCols = Math.ceil(canvas.width / gridSize);
-  const numRows = Math.ceil(canvas.height / gridSize);
+  const numCols = Math.ceil(gridCanvas.width / gridSize);
+  const numRows = Math.ceil(gridCanvas.height / gridSize);
 
-  // Prevent anti-aliasing for sharp pixel rendering
-  ctx.imageSmoothingEnabled = false;
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "#ccc"; // Grid color
+  ctx.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
+  ctx.fillStyle = "#3B3B3B"; //grid color
   ctx.globalAlpha = 0.2;
 
   for (let col = 0; col < numCols; col++) {
@@ -238,8 +224,7 @@ function redrawGrid() {
       }
     }
   }
-
-  ctx.globalAlpha = 1; // Reset the alpha value
+  ctx.globalAlpha = 1; //reset the alpha value
 }
 
 function handleColorInput(input) {
@@ -262,6 +247,7 @@ colorInputs.forEach(input => {
   
 //start canvas logic
 const ctx = canvas.getContext("2d");
+const gridCanvas = document.getElementById('grid-canvas');
 const ctxGrid = gridCanvas.getContext('2d');
 
 let drawnContent = [];
