@@ -34,15 +34,13 @@ let backgroundColor = [255, 255, 255];
 let drawColor = [0, 0, 0];
 let brushType = 0;
 
-let blobs = 0;
+let blobs = 1;
 let isDrawing;
 
 const defaultCanvas = [512, 512];
 
 //MAKE BACKGROUND FILL WITH WHITE IF ALPHA MODE NOT ON IF ALPHA MODE ON LEAVE AS IS AND MAKE ERASE SET BACKGROUUND TO TRASNPARENT
 //MAKE TOOLBAR SCROLL
-
-//CHANGING BACKGROUND COLOR WHEN CANVAS HAS A LOT OF SHAPES IS NOT GOOD AT ALL
 
 //NEXT: undo feature
 
@@ -90,19 +88,145 @@ window.onload = () => {
     if(localStorage.getItem("brushType") == 0) handleButtonInput(document.getElementById("circle-type"));
     if(localStorage.getItem("brushType") == 1) handleButtonInput(document.getElementById("square-type"));
 
+    const allMenus = document.querySelectorAll('.dropdown-menu');
+    allMenus.forEach(menu => {
+        menu.style.display = 'none';
+    });
     initCanvas();
 }
 
+let transactionHistory = []; // Array to save transaction history
+let redoHistory = []; // Array to save undone transactions
+
+function pushTransaction(action, element) {
+  transactionHistory.push({ action, element });
+}
+
+function undo() {
+  if (transactionHistory.length > 0) {
+    const lastAction = transactionHistory.pop();
+    if (lastAction.action === 'add') {
+      const elementToRemove = lastAction.element;
+      const indexToRemove = drawnContent.findIndex(element => JSON.stringify(element) === JSON.stringify(elementToRemove));
+      if (indexToRemove !== -1) {
+        drawnContent.splice(indexToRemove, 1);
+        redoHistory.push(lastAction);
+        console.log("Element removed:", elementToRemove);
+      }
+    } else if (lastAction.action === 'remove') {
+      drawnContent.push(lastAction.element);
+      redoHistory.push(lastAction);
+      console.log("Element added:", lastAction.element);
+    }
+    initCanvas();
+  } else {
+    console.log("Nothing to undo");
+  }
+}
+
+function redo() {
+  if (redoHistory.length > 0) {
+    const lastUndoneAction = redoHistory.pop();
+    if (lastUndoneAction.action === 'add') {
+      drawnContent.push(lastUndoneAction.element);
+      transactionHistory.push(lastUndoneAction);
+      console.log("Redo element added:", lastUndoneAction.element);
+    } else if (lastUndoneAction.action === 'remove') {
+      const elementToRemove = lastUndoneAction.element;
+      const indexToRemove = drawnContent.findIndex(element => JSON.stringify(element) === JSON.stringify(elementToRemove));
+      if (indexToRemove !== -1) {
+        drawnContent.splice(indexToRemove, 1);
+        transactionHistory.push(lastUndoneAction);
+        console.log("Redo element removed:", elementToRemove);
+      }
+    }
+    initCanvas();
+    blobs = drawnContent.length + 1;
+  } else {
+    console.log("Nothing to redo");
+  }
+}
+
+function addTransaction(locationX, locationY, size, color, type, isErase) {
+  const element = {
+    x: locationX,
+    y: locationY,
+    size: size,
+    color: color,
+    type: type,
+    isErase: isErase
+  };
+  pushTransaction('add', element);
+}
+
 const handleHeaderAction = (action) => {
+  const allMenus = document.querySelectorAll('.dropdown-menu');
+  allMenus.forEach(menu => {
+      menu.style.display = 'none';
+      menu.removeEventListener('mouseleave', hideMenu); // Remove any previous event listener
+  });
+
+  const menu = document.getElementById(`${action}-menu`);
+  if (menu) {
+      const button = document.querySelector(`button[aria-label="${action}"]`);
+      const rect = button.getBoundingClientRect();
+
+      // Calculate the horizontal center position
+      const buttonWidth = rect.width;
+      const menuWidth = menu.offsetWidth;
+      const centerPosition = rect.left + (buttonWidth / 0) - (menuWidth / 2);
+
+      // Position the menu horizontally centered below the button
+      menu.style.position = 'absolute';
+      menu.style.left = `${centerPosition}px`;
+      menu.style.top = rect.bottom + 'px';
+      menu.style.display = 'flex';
+      menu.style.zIndex = 9999;
+
+      // Add event listener to hide menu on mouse leave
+      menu.addEventListener('mouseleave', hideMenu);
+  }
+}
+
+const handleHeaderSubAction = (action) => {
   switch (action) {
-    case 'file':
+    case 'new-file':
+      window.location.reload();
+      break;
+    case 'save':
       saveCanvasAsImage();
       break;
-  
+    case 'save-as':
+      saveCanvasAsImage();
+      break;
+    case 'exit':
+      closeWindow();
+      break;
+    case 'undo':
+      undo();
+      break;
+    case 'redo':
+      redo();
+      break;
+    case 'zoom-in':
+      console.log(`Zoom: ${canvas.style.transform}`);
+      break;
+    case 'zoom-out':
+      console.log(`Zoom: ${canvas.style.transform}`);
+      break;
     default:
-      console.log(action);
       break;
   }
+}
+
+function closeWindow() {
+  let new_window = open(location, '_self');
+  new_window.close();
+  return false;
+}
+
+const hideMenu = (event) => {
+  event.target.style.display = 'none';
 }
 
 //canvas zoom
@@ -149,6 +273,14 @@ function applyZoom() {
     gridCanvas.style.transform = `scale(${clamp(scaleFactor, 0.1, 100)})`;
 }
 //end canvas zoom
+
+document.addEventListener('keydown', function(event) {
+  // Check if Ctrl+S (or Command+S for Mac) is pressed
+  if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+    event.preventDefault();
+    saveCanvasAsImage();
+  }
+});
 
 function saveCanvasAsImage() {
   const canvas = document.getElementById('canvas');
@@ -341,7 +473,6 @@ function spawnCircle(locationX, locationY, size) {
   const drawSize = Math.min(size, minCanvasSize);
   ctx.imageSmoothingEnabled = true;
   ctx.beginPath();
-  blobs++;
 
   if (!draw) {
     ctx.globalCompositeOperation = 'destination-out'; //for erase
@@ -352,27 +483,32 @@ function spawnCircle(locationX, locationY, size) {
         ctx.arc(locationX, locationY, drawSize / 2, 0, Math.PI * 2);
         ctx.fill();
         storeDrawnShape(locationX, locationY, drawSize, ctx.fillStyle, 'erase', true);
+        addTransaction(locationX, locationY, drawSize, ctx.fillStyle, 'erase', true); //for undo/redo
         break;
       case 1:
         ctx.fillRect(locationX - drawSize / 2, locationY - drawSize / 2, drawSize, drawSize);
         storeDrawnShape(locationX, locationY, drawSize, ctx.fillStyle, 'erase', true);
+        addTransaction(locationX, locationY, drawSize, ctx.fillStyle, 'erase', true); //for undo/redo
         break;
       default:
         break;
     }
     
     ctx.globalCompositeOperation = 'source-over'; //normal drawiing
-  } else {
+  } 
+  else {
     ctx.fillStyle = `rgba(${drawColor[0]}, ${drawColor[1]}, ${drawColor[2]}, ${bgAlphaSize})`;
     
     switch (brushType) {
       case 0:
         ctx.arc(locationX, locationY, drawSize / 2, 0, Math.PI * 2);
         storeDrawnShape(locationX, locationY, drawSize, ctx.fillStyle, 'circle');
+        addTransaction(locationX, locationY, drawSize, ctx.fillStyle, 'circle'); //for undo/redo
         break;
       case 1:
         ctx.fillRect(locationX - drawSize / 2, locationY - drawSize / 2, drawSize, drawSize);
         storeDrawnShape(locationX, locationY, drawSize, ctx.fillStyle, 'square');
+        addTransaction(locationX, locationY, drawSize, ctx.fillStyle, 'square'); //for undo/redo
         break;
       default:
         break;
@@ -380,6 +516,7 @@ function spawnCircle(locationX, locationY, size) {
     
     ctx.fill();
   }
+  blobs = drawnContent.length + 1;
 }
 
 function clearCanvas(color, alpha) {
@@ -411,6 +548,7 @@ function clearCanvas(color, alpha) {
 const initCanvas = () => {
   clearCanvas(`rgba(0, 0, 0, 0)`, bgAlphaSize); //make transparent background
   console.log("Canvas initialized");
+  blobs = drawnContent.length + 1;
 }
 
 function updateDisplay(event) {
@@ -439,7 +577,7 @@ canvas.addEventListener("mousedown", (event) => {
 canvas.addEventListener("mouseup", (event) => {
   if (event.button === 0) { //left mouse button
     isDrawing = false;
-    updateDisplay(event);
+    //updateDisplay(event);
   }
 });
 

@@ -16,12 +16,42 @@
                 <ul class="header-list">
                     <li class="header-list-item">
                         <button class="header-action-button" aria-label="file" onclick="handleHeaderAction('file')">File</button>
+                        <ul class="dropdown-menu" id="file-menu">
+                            <li class="dropdown-item">
+                                <button class="header-action-button dropdown-button" onclick="handleHeaderSubAction('new-file')">New File</button>
+                            </li>
+                            <li class="dropdown-item">
+                                <button class="header-action-button dropdown-button" onclick="handleHeaderSubAction('save')">Save</button>
+                            </li>
+                            <li class="dropdown-item">
+                                <button class="header-action-button dropdown-button" onclick="handleHeaderSubAction('save-as')">Save As...</button>
+                            </li>
+                            <li class="dropdown-item">
+                                <button class="header-action-button dropdown-button" onclick="handleHeaderSubAction('exit')">Exit</button>
+                            </li>
+                        </ul>
                     </li>
                     <li class="header-list-item">
                         <button class="header-action-button" aria-label="edit" onclick="handleHeaderAction('edit')">Edit</button>
+                        <ul class="dropdown-menu" id="edit-menu">
+                            <li class="dropdown-item">
+                                <button class="header-action-button dropdown-button" onclick="handleHeaderSubAction('undo')">Undo</button>
+                            </li>
+                            <li class="dropdown-item">
+                                <button class="header-action-button dropdown-button" onclick="handleHeaderSubAction('redo')">Redo</button>
+                            </li>
+                        </ul>
                     </li>
                     <li class="header-list-item">
                         <button class="header-action-button" aria-label="view" onclick="handleHeaderAction('view')">View</button>
+                        <ul class="dropdown-menu" id="view-menu">
+                            <li class="dropdown-item">
+                                <button class="header-action-button dropdown-button" onclick="handleHeaderSubAction('zoom-in')" onmousedown="zoomIn()" onmouseup="stopZoom()">Zoom In</button>
+                            </li>
+                            <li class="dropdown-item">
+                                <button class="header-action-button dropdown-button" onclick="handleHeaderSubAction('zoom-out')" onmousedown="zoomOut()" onmouseup="stopZoom()">Zoom Out</button>
+                            </li>
+                        </ul>
                     </li>
                 </ul>
             </nav>

@@ -43,7 +43,7 @@ body {
     font-size: 1rem;
     font-weight: 400;
     border: 0;
-    border-radius: 20px;
+    border-radius: 5px;
     padding: 5px 10px;
     transition: background-colors .2s ease-in-out;
 }
@@ -52,6 +52,22 @@ body {
     background-color: rgb(35, 33, 143);
     color: white;
     height: fill;
+}
+
+.dropdown-menu {
+    list-style: none;
+    margin: 0;
+    padding: 10px;
+    display: flex;
+    gap: 5px;
+    flex-direction: column;
+    background-color: rgb(0, 0, 0);
+    border-radius: 5px;
+}
+
+.dropdown-button {
+    width: 100%;
+    border-radius: 5px;
 }
 
 .container-main {
