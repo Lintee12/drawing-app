@@ -313,12 +313,6 @@ function clearCanvas(color, alpha) {
   redrawContent();
 }
 
-const initCanvas = () => {
-  clearCanvas(`rgba(0, 0, 0, 0)`, mainAlphaSize); //make transparent background
-  console.log("Canvas initialized");
-  blobs = drawnContent.length + 1;
-}
-
 // Redraw all content
 function redrawContent() {
   drawnContent.forEach(strokeData => {
@@ -331,24 +325,27 @@ function redrawContent() {
     ctx.globalCompositeOperation = GCO;
 
     if (path.length > 0) {
-      const startPoint = path[0];
       ctx.beginPath();
+      const startPoint = path[0];
       ctx.moveTo(startPoint.x, startPoint.y);
 
       path.forEach(point => {
-        if (brushType === 0) { //circle
+        if (brushType === 0 || brushType === 1) {
           ctx.lineTo(point.x, point.y);
-          ctx.stroke();
-        } 
-        else if (brushType === 1) { //square
-          ctx.lineTo(point.x, point.y);
-          ctx.stroke();
         }
       });
+
+      ctx.stroke();
     }
   });
 }
 
+
+const initCanvas = () => {
+  clearCanvas(`rgba(0, 0, 0, 0)`, mainAlphaSize); //make transparent background
+  console.log("Canvas initialized");
+  blobs = drawnContent.length + 1;
+}
 
 let currentPath = [];
 let currentStroke = {
