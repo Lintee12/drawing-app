@@ -7,6 +7,7 @@ const drawSizeSlider = document.getElementById("draw-size");
 const drawSizeBind = document.getElementById("draw-size-bind");
 
 const canvas = document.getElementById("canvas");
+//const defaultCanvas = [window.screen.availWidth, window.screen.availHeight];
 const defaultCanvas = [512, 512];
 
 const gridCanvas = document.getElementById('grid-canvas');
@@ -29,6 +30,8 @@ window.onload = () => {
     document.getElementById("canvas-size-height").value = defaultCanvas[1];
     canvas.width = defaultCanvas[0];
     canvas.height = defaultCanvas[1];
+    gridCanvas.width = defaultCanvas[0];
+    gridCanvas.height = defaultCanvas[1];
 
     if(localStorage.getItem("drawSize") == null) localStorage.setItem("drawSize", 18)
     drawSizeSlider.value = localStorage.getItem("drawSize");
@@ -291,57 +294,6 @@ function getMousePos(canvas, event) {
   };
 }
 
-function spawnCircle(locationX, locationY, size) {
-  const minCanvasSize = Math.min(canvas.width, canvas.height);
-  const drawSize = Math.min(size, minCanvasSize);
-  ctx.imageSmoothingEnabled = true;
-  ctx.beginPath();
-
-  if (!draw) {
-    ctx.globalCompositeOperation = 'destination-out'; //for erase
-    ctx.fillStyle = 'rgba(0, 0, 0, 1)'; //eraase is transparent right now
-
-    switch (brushType) {
-      case 0:
-        ctx.arc(locationX, locationY, drawSize / 2, 0, Math.PI * 2);
-        ctx.fill();
-        storeDrawnShape(locationX, locationY, drawSize, ctx.fillStyle, 'erase', true);
-        addTransaction(locationX, locationY, drawSize, ctx.fillStyle, 'erase', true); //for undo/redo
-        break;
-      case 1:
-        ctx.fillRect(locationX - drawSize / 2, locationY - drawSize / 2, drawSize, drawSize);
-        storeDrawnShape(locationX, locationY, drawSize, ctx.fillStyle, 'erase', true);
-        addTransaction(locationX, locationY, drawSize, ctx.fillStyle, 'erase', true); //for undo/redo
-        break;
-      default:
-        break;
-    }
-    
-    ctx.globalCompositeOperation = 'source-over'; //normal drawiing
-  } 
-  else {
-    ctx.fillStyle = `rgba(${drawColor[0]}, ${drawColor[1]}, ${drawColor[2]}, ${mainAlphaSize})`;
-    
-    switch (brushType) {
-      case 0:
-        ctx.arc(locationX, locationY, drawSize / 2, 0, Math.PI * 2);
-        storeDrawnShape(locationX, locationY, drawSize, ctx.fillStyle, 'circle');
-        addTransaction(locationX, locationY, drawSize, ctx.fillStyle, 'circle'); //for undo/redo
-        break;
-      case 1:
-        ctx.fillRect(locationX - drawSize / 2, locationY - drawSize / 2, drawSize, drawSize);
-        storeDrawnShape(locationX, locationY, drawSize, ctx.fillStyle, 'square');
-        addTransaction(locationX, locationY, drawSize, ctx.fillStyle, 'square'); //for undo/redo
-        break;
-      default:
-        break;
-    }
-    
-    ctx.fill();
-  }
-  blobs = drawnContent.length + 1;
-}
-
 function clearCanvas(color, alpha) {
   //clear canvas
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -356,16 +308,19 @@ function clearCanvas(color, alpha) {
   //redraw only non-erased content on top of the new background
   drawnContent.forEach(shape => {
     if (!shape.isErase) {
-      ctx.fillStyle = shape.color;
+      ctx.lineWidth = shape.size;
+      ctx.strokeStyle = shape.color;
       if (shape.type === 'circle') {
         ctx.beginPath();
         ctx.arc(shape.x, shape.y, shape.size / 2, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.stroke();
       } else if (shape.type === 'square') {
-        ctx.fillRect(shape.x - shape.size / 2, shape.y - shape.size / 2, shape.size, shape.size);
+        ctx.beginPath();
+        ctx.rect(shape.x - shape.size / 2, shape.y - shape.size / 2, shape.size, shape.size);
+        ctx.stroke();
       }
     }
-  });
+  });  
 }
 
 const initCanvas = () => {
@@ -374,45 +329,85 @@ const initCanvas = () => {
   blobs = drawnContent.length + 1;
 }
 
-function updateDisplay(event) {
-  const mousePos = getMousePos(canvas, event);
-  const drawSize = parseInt(document.getElementById("draw-size").value);
-  canvas.setAttribute("busy", isDrawing);
-  canvas.setAttribute("blobs", blobs);
+let prevX, prevY;
 
-  if (draw) {
-    ctx.fillStyle = `rgb(${drawColor[0]}, ${drawColor[1]}, ${drawColor[2]})`;
-    spawnCircle(mousePos.x, mousePos.y, drawSize);
-  } 
-  else {
-    ctx.fillStyle = `rgba(255, 255, 255, ${mainAlphaSize})`;
-    spawnCircle(mousePos.x, mousePos.y, drawSize);
-  } 
+function startStroke(event) {
+  ctx.lineWidth = drawSize / 2;
+  if(draw) { //draw mode
+    ctx.globalCompositeOperation = 'source-over';
+    console.log("draw");
+    ctx.strokeStyle = `rgb(${drawColor[0]}, ${drawColor[1]}, ${drawColor[2]})`;
+  }
+  else { //erase mode
+    ctx.globalCompositeOperation = 'destination-out';
+    console.log("erase");
+    ctx.strokeStyle = `rgba(0, 0, 0, ${mainAlphaSize})`; //transparent
+  }
+  const { x, y } = getMousePos(canvas, event);
+  storeStroke(x, y, ctx.lineWidth, ctx.strokeStyle, brushType, !draw); // Store the start of the stroke
+  if (brushType === 0) {
+    ctx.beginPath();
+    ctx.arc(x, y, ctx.lineWidth / 2, 0, Math.PI * 2); //initial circle
+    ctx.stroke();
+  } else if (brushType === 1) {
+    ctx.beginPath();
+    ctx.rect(x - ctx.lineWidth / 2, y - ctx.lineWidth / 2, ctx.lineWidth, ctx.lineWidth); //initial square
+    ctx.stroke();
+  }
+  prevX = x;
+  prevY = y;
+}
+
+function drawStroke(event) {
+  const { x, y } = getMousePos(canvas, event);
+  const dist = Math.sqrt((x - prevX) ** 2 + (y - prevY) ** 2);
+  const angle = Math.atan2(y - prevY, x - prevX);
+
+  for (let i = 0; i < dist; i += 5) {
+    const newX = prevX + Math.cos(angle) * i;
+    const newY = prevY + Math.sin(angle) * i;
+    storeStroke(newX, newY, ctx.lineWidth, ctx.strokeStyle, brushType, !draw);
+    if (brushType === 0) { //circle
+      ctx.beginPath();
+      ctx.arc(newX, newY, ctx.lineWidth / 2, 0, Math.PI * 2);
+      ctx.stroke();
+    } else if (brushType === 1) { //sqaure
+      ctx.beginPath();
+      ctx.rect(newX - ctx.lineWidth / 2, newY - ctx.lineWidth / 2, ctx.lineWidth, ctx.lineWidth);
+      ctx.stroke();
+    }
+  }
+
+  prevX = x;
+  prevY = y;
+}
+
+function endStroke() {
+  storeStroke(prevX, prevY, ctx.lineWidth, ctx.strokeStyle, brushType, !draw);
+  console.log("stroke end")
 }
 
 canvas.addEventListener("mousedown", (event) => {
-    if (event.button === 0) { //left mouse button
-      isDrawing = true;
-      updateDisplay(event);
-    }
+  if (event.button === 0) {
+    isDrawing = true;
+    startStroke(event);
+  }
 });
 
 canvas.addEventListener("mouseup", (event) => {
-  if (event.button === 0) { //left mouse button
+  if (event.button === 0) {
     isDrawing = false;
-    //updateDisplay(event);
+    endStroke();
   }
 });
-
-const throttledUpdateDisplay = _.throttle(updateDisplay, 0);
 
 canvas.addEventListener("mousemove", (event) => {
-  if (event.buttons === 1) {
-    throttledUpdateDisplay(event);
+  if (isDrawing) {
+    drawStroke(event);
   }
 });
 
-function storeDrawnShape(locationX, locationY, size, color, type, isErase) {
+function storeStroke(locationX, locationY, size, color, type, isErase) {
   drawnContent.push({
     x: locationX,
     y: locationY,
