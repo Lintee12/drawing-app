@@ -9,6 +9,9 @@ const drawSizeBind = document.getElementById("draw-size-bind");
 const canvas = document.getElementById("canvas");
 const defaultCanvas = [512, 512];
 
+const gridCanvas = document.getElementById('grid-canvas');
+let gridSize = 16;
+
 let draw = true;
 let drawSize = localStorage.getItem("drawSize");
 let brushType = 0;
@@ -50,6 +53,7 @@ window.onload = () => {
     });
     initCanvas();
     redrawGrid();
+    adjustHeader()
 }
 
 const handleHeaderAction = (action) => {
@@ -85,6 +89,9 @@ const handleHeaderSubAction = (action) => {
   switch (action) {
     case 'new-file':
       window.location.reload();
+      break;
+    case 'import':
+      console.log("import");
       break;
     case 'save':
       saveCanvasAsImage();
@@ -203,13 +210,19 @@ function handleNumberInput(input) {
       gridCanvas.height = input.value;
     }
     redrawGrid();
+    initCanvas();
+  }
+  //handle grid size change
+  if(input.dataset.action === "grid-size") {
+    gridSize = input.value;
+    redrawGrid();
   }
 }
 
 function redrawGrid() {
+  console.log("drawing grid")
   const ctx = gridCanvas.getContext("2d");
 
-  const gridSize = 16;
   const numCols = Math.ceil(gridCanvas.width / gridSize);
   const numRows = Math.ceil(gridCanvas.height / gridSize);
 
@@ -247,7 +260,6 @@ colorInputs.forEach(input => {
   
 //start canvas logic
 const ctx = canvas.getContext("2d");
-const gridCanvas = document.getElementById('grid-canvas');
 const ctxGrid = gridCanvas.getContext('2d');
 
 let drawnContent = [];
@@ -372,7 +384,7 @@ function updateDisplay(event) {
     spawnCircle(mousePos.x, mousePos.y, drawSize);
   } 
   else {
-    ctx.fillStyle = `rgba(255, 255, 255, ${mainAlphaSize})`;
+    ctx.fillStyle = `rgba(255, 255, 0, ${mainAlphaSize})`;
     spawnCircle(mousePos.x, mousePos.y, drawSize);
   } 
 }

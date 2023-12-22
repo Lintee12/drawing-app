@@ -63,39 +63,42 @@ let zoomTimeout;
 canvas.addEventListener('wheel', function(event) {
   event.preventDefault();
 
-  if (event.deltaY < 0) {
-      //zoom in
-      scaleFactor += zoomIncrement;
-  } else {
-      //zoom out
-      if (scaleFactor > zoomIncrement) {
-          scaleFactor -= zoomIncrement;
-      }
-  }
+	if (event.deltaY < 0) {
+		//zoom in
+		scaleFactor += zoomIncrement;
+	} else {
+		//zoom out
+		if (scaleFactor > zoomIncrement) {
+			scaleFactor -= zoomIncrement;
+		}
+	}
 
   applyZoom();
 });
 
 function zoomIn() {
     scaleFactor += zoomIncrement;
-    applyZoom();
-    zoomTimeout = setTimeout(zoomIn, 100);
+    zoomTimeout = setTimeout(zoomIn, 100); //zoomTimeout = setTimeout(zoomOut, 100); //this is causing issue when zooming with buttons
+	applyZoom();
 }
 
 function zoomOut() {
     if (scaleFactor > zoomIncrement) {
         scaleFactor -= zoomIncrement;
         applyZoom();
-        zoomTimeout = setTimeout(zoomOut, 100);
+        zoomTimeout = setTimeout(zoomOut, 100); //this is causing issue when zooming with buttons
     }
+	applyZoom();
 }
 
 function stopZoom() {
-    clearTimeout(zoomTimeout);
+    clearTimeout(zoomTimeout); //this is causing issue when zooming with buttons
 }
 
 function applyZoom() {
     canvas.style.transform = `scale(${clamp(scaleFactor, 0.1, 100)})`;
     gridCanvas.style.transform = `scale(${clamp(scaleFactor, 0.1, 100)})`;
+	document.getElementsByClassName("zoom-value")[0].innerHTML = `${clamp(Math.round(scaleFactor * 100), 10, 999999)}%`;
 }
+document.getElementsByClassName("zoom-value")[0].innerHTML = `${clamp(Math.round(scaleFactor * 100), 10, 999999)}%`;
 /* end canvas zoom */
