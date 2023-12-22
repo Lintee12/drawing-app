@@ -326,7 +326,7 @@ const initCanvas = () => {
 let prevX, prevY;
 
 function startStroke(event) {
-  ctx.lineWidth = drawSize / 2;
+  ctx.lineWidth = clamp(drawSize / 2, 1, 255);
   if(draw) { //draw mode
     ctx.globalCompositeOperation = 'source-over';
     console.log("draw");
@@ -380,7 +380,6 @@ function endStroke() {
     content: ctx.getImageData(0, 0, canvas.width, canvas.height), // Store the drawn content
   };
   drawnContent.push(strokeData);
-  transactionHistory.push(strokeData);
   console.log("stroke end");
 }
 

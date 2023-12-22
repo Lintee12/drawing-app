@@ -1,4 +1,4 @@
-let transactionHistory = []; // Array to save transaction history
+//let transactionHistory = []; // Array to save transaction history
 let redoHistory = []; // Array to save undone transactions
 
 function undo() {
@@ -17,8 +17,4 @@ function redo() {
   } else {
     console.log("Nothing to redo");
   }
-}
-
-function addTransaction(data) {
-  transactionHistory.push(data);
 }
