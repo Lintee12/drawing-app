@@ -198,7 +198,14 @@ function handleNumberInput(input) {
     input.value = numericValue;
     input.setAttribute("value", numericValue);
   }
+  //handle grid size change
+  if(input.dataset.action === "grid-size") {
+    gridSize = input.value;
+    redrawGrid();
+  }
+}
 
+function submitNumberInput(input) {
   //handle canvas size change
   if (input.dataset.action === "canvas-size") {
     if (input.id === "canvas-size-width") {
@@ -215,11 +222,6 @@ function handleNumberInput(input) {
     }
     redrawGrid();
     initCanvas();
-  }
-  //handle grid size change
-  if(input.dataset.action === "grid-size") {
-    gridSize = input.value;
-    redrawGrid();
   }
 }
 
@@ -269,6 +271,7 @@ const ctxGrid = gridCanvas.getContext('2d');
 let drawnContent = [];
 
 ctx.canvas.willReadFrequently = true;
+ctx.imageSmoothingEnabled = true;
 
 const devicePixelRatio = window.devicePixelRatio || 1;
 const backingStoreRatio = ctx.webkitBackingStorePixelRatio ||
@@ -307,14 +310,7 @@ function clearCanvas(color, alpha) {
 
   ctx.globalAlpha = 1;
 
-  //redraw all content
-  drawnContent.forEach(strokeData => {
-    const brush = strokeData.type === 'circle' ? 'circle' : 'square';
-    const content = strokeData.content;
-    
-    ctx.putImageData(content, 0, 0);
-    console.log(`redrawing stroke`)
-  });
+  redrawContent();
 }
 
 const initCanvas = () => {
@@ -323,63 +319,102 @@ const initCanvas = () => {
   blobs = drawnContent.length + 1;
 }
 
-let prevX, prevY;
+// Redraw all content
+function redrawContent() {
+  drawnContent.forEach(strokeData => {
+    const { brushType, drawSize, strokeStyle, capType, joinType, GCO, path } = strokeData;
+
+    ctx.lineWidth = clamp(drawSize / 2, 0, 255);
+    ctx.strokeStyle = strokeStyle;
+    ctx.lineCap = capType;
+    ctx.lineJoin = joinType;
+    ctx.globalCompositeOperation = GCO;
+
+    if (path.length > 0) {
+      const startPoint = path[0];
+      ctx.beginPath();
+      ctx.moveTo(startPoint.x, startPoint.y);
+
+      path.forEach(point => {
+        if (brushType === 0) { //circle
+          ctx.lineTo(point.x, point.y);
+          ctx.stroke();
+        } 
+        else if (brushType === 1) { //square
+          ctx.lineTo(point.x, point.y);
+          ctx.stroke();
+        }
+      });
+    }
+  });
+}
+
+
+let currentPath = [];
+let currentStroke = {
+  brushType: 0,
+  drawSize: 0,
+  strokeStyle: 0,
+  capType: 0,
+  joinType: 0,
+  GCO: 0,
+  path: 0
+};
 
 function startStroke(event) {
+  const { x, y } = getMousePos(canvas, event);
   ctx.lineWidth = clamp(drawSize / 2, 1, 255);
   if(draw) { //draw mode
     ctx.globalCompositeOperation = 'source-over';
-    console.log("draw");
     ctx.strokeStyle = `rgb(${drawColor[0]}, ${drawColor[1]}, ${drawColor[2]})`;
   }
   else { //erase mode
     ctx.globalCompositeOperation = 'destination-out';
-    console.log("erase");
-    ctx.strokeStyle = `rgba(0, 0, 0, ${mainAlphaSize})`; //transparent
+    ctx.strokeStyle = `rgba(0, 0, 0, ${mainAlphaSize})`;
   }
-  const { x, y } = getMousePos(canvas, event);
-  if (brushType === 0) {
+  if (brushType === 0) { //circle
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round'
     ctx.beginPath();
-    ctx.arc(x, y, ctx.lineWidth / 2, 0, Math.PI * 2); //initial circle
-    ctx.stroke();
-  } else if (brushType === 1) {
+    ctx.moveTo(x, y);
+  } 
+  else if (brushType === 1) { //square
+    ctx.lineCap = 'butt';
+    ctx.lineJoin = 'round'
     ctx.beginPath();
-    ctx.rect(x - ctx.lineWidth / 2, y - ctx.lineWidth / 2, ctx.lineWidth, ctx.lineWidth); //initial square
-    ctx.stroke();
+    ctx.moveTo(x, y);
+    //ctx.strokeRect(x, y, drawSize / 1000, drawSize / 1000);
   }
-  prevX = x;
-  prevY = y;
+
+  currentPath = [{ x, y }];
+  currentStroke = {
+    brushType: brushType,
+    drawSize: drawSize,
+    strokeStyle: ctx.strokeStyle,
+    capType: ctx.lineCap,
+    joinType: ctx.lineJoin,
+    GCO: ctx.globalCompositeOperation,
+    path: currentPath.slice(),
+  };
 }
 
 function drawStroke(event) {
   const { x, y } = getMousePos(canvas, event);
-  const dist = Math.sqrt((x - prevX) ** 2 + (y - prevY) ** 2);
-  const angle = Math.atan2(y - prevY, x - prevX);
 
-  for (let i = 0; i < dist; i += 5) {
-    const newX = prevX + Math.cos(angle) * i;
-    const newY = prevY + Math.sin(angle) * i;
-    if (brushType === 0) { //circle
-      ctx.beginPath();
-      ctx.arc(newX, newY, ctx.lineWidth / 2, 0, Math.PI * 2);
-      ctx.stroke();
-    } else if (brushType === 1) { //sqaure
-      ctx.beginPath();
-      ctx.rect(newX - ctx.lineWidth / 2, newY - ctx.lineWidth / 2, ctx.lineWidth, ctx.lineWidth);
-      ctx.stroke();
-    }
+  if (brushType === 0) { //circle
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  } 
+  else if (brushType === 1) { //sqaure
+    ctx.lineTo(x, y);
+    ctx.stroke();
   }
-
-  prevX = x;
-  prevY = y;
+  currentPath.push({ x, y });
+  currentStroke.path = currentPath.slice();
 }
 
 function endStroke() {
-  const strokeData = {
-    type: brushType === 0 ? 'circle' : 'square', // Store brush type
-    content: ctx.getImageData(0, 0, canvas.width, canvas.height), // Store the drawn content
-  };
-  drawnContent.push(strokeData);
+  drawnContent.push(currentStroke);
   console.log("stroke end");
 }
 
@@ -387,6 +422,7 @@ canvas.addEventListener("mousedown", (event) => {
   if (event.button === 0) {
     isDrawing = true;
     startStroke(event);
+    drawStroke(event);
   }
 });
 

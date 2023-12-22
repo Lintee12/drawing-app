@@ -97,9 +97,9 @@
                     <span class="tool-label">Canvas size</span>
                     <div class="tool-section-row">
                         <span class="tool-hint">W:</span>
-                        <input class="paint-number-medium" aria-label="canvas width" data-action="canvas-size" id="canvas-size-width" type="number" value="0" min="0" max="7680" oninput="handleNumberInput(this)"/>
+                        <input class="paint-number-medium" aria-label="canvas width" data-action="canvas-size" id="canvas-size-width" type="number" value="0" min="0" max="7680" oninput="handleNumberInput(this)" onchange="submitNumberInput(this)"/>
                         <span class="tool-hint">H:</span>
-                        <input class="paint-number-medium" aria-label="canvas height" data-action="canvas-size" id="canvas-size-height" type="number" value="0" min="0" max="4320" oninput="handleNumberInput(this)"/>
+                        <input class="paint-number-medium" aria-label="canvas height" data-action="canvas-size" id="canvas-size-height" type="number" value="0" min="0" max="4320" oninput="handleNumberInput(this)" onchange="submitNumberInput(this)"/>
                     </div>
                 </div>
                 <div class="tool-section">
