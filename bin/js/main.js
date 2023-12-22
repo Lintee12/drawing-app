@@ -268,6 +268,8 @@ const ctxGrid = gridCanvas.getContext('2d');
 
 let drawnContent = [];
 
+ctx.canvas.willReadFrequently = true;
+
 const devicePixelRatio = window.devicePixelRatio || 1;
 const backingStoreRatio = ctx.webkitBackingStorePixelRatio ||
                           ctx.mozBackingStorePixelRatio ||
@@ -305,18 +307,13 @@ function clearCanvas(color, alpha) {
 
   ctx.globalAlpha = 1;
 
-  //redraw only non-erased content on top of the new background
-  drawnContent.forEach(shape => {
-    if (!shape.isErase) {
-      ctx.fillStyle = shape.color;
-      if (shape.type === 'circle') {
-        ctx.beginPath();
-        ctx.arc(shape.x, shape.y, shape.size / 2, 0, Math.PI * 2);
-        ctx.fill();
-      } else if (shape.type === 'square') {
-        ctx.fillRect(shape.x - shape.size / 2, shape.y - shape.size / 2, shape.size, shape.size);
-      }
-    }
+  //redraw all content
+  drawnContent.forEach(strokeData => {
+    const brush = strokeData.type === 'circle' ? 'circle' : 'square';
+    const content = strokeData.content;
+    
+    ctx.putImageData(content, 0, 0);
+    console.log(`redrawing stroke`)
   });
 }
 
@@ -378,7 +375,13 @@ function drawStroke(event) {
 }
 
 function endStroke() {
-  console.log("stroke end")
+  const strokeData = {
+    type: brushType === 0 ? 'circle' : 'square', // Store brush type
+    content: ctx.getImageData(0, 0, canvas.width, canvas.height), // Store the drawn content
+  };
+  drawnContent.push(strokeData);
+  transactionHistory.push(strokeData);
+  console.log("stroke end");
 }
 
 canvas.addEventListener("mousedown", (event) => {
@@ -400,14 +403,3 @@ canvas.addEventListener("mousemove", (event) => {
     drawStroke(event);
   }
 });
-
-function storeStroke(locationX, locationY, size, color, type, isErase) {
-  drawnContent.push({
-    x: locationX,
-    y: locationY,
-    size: size,
-    color: color,
-    type: type,
-    isErase: isErase //shape is eraseer
-  });
-}
