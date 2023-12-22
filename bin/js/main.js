@@ -133,12 +133,29 @@ const hideMenu = (event) => {
   event.target.style.display = 'none';
 }
 
+/* hotkeys */
+document.addEventListener('keydown', function(event) {
+  if ((event.ctrlKey || event.metaKey) && event.key === 'z') {
+    event.preventDefault();
+    undo();
+  }
+});
+
+
+document.addEventListener('keydown', function(event) {
+  if ((event.ctrlKey || event.metaKey) && event.key === 'y') {
+    event.preventDefault();
+    redo(); 
+  }
+});
+
 document.addEventListener('keydown', function(event) {
   if ((event.ctrlKey || event.metaKey) && event.key === 's') {
     event.preventDefault();
     saveCanvasAsImage();
   }
 });
+/* end hotkeys */
 
 function saveCanvasAsImage() {
   const canvas = document.getElementById('canvas');
@@ -340,7 +357,6 @@ function redrawContent() {
   });
 }
 
-
 const initCanvas = () => {
   clearCanvas(`rgba(0, 0, 0, 0)`, mainAlphaSize); //make transparent background
   console.log("Canvas initialized");
@@ -415,23 +431,43 @@ function endStroke() {
   console.log("stroke end");
 }
 
+let mouseOnCanvas = false;
+
 canvas.addEventListener("mousedown", (event) => {
   if (event.button === 0) {
-    isDrawing = true;
-    startStroke(event);
-    drawStroke(event);
+    if(mouseOnCanvas) {
+      isDrawing = true;
+      startStroke(event);
+      drawStroke(event);
+    }
   }
 });
 
 canvas.addEventListener("mouseup", (event) => {
   if (event.button === 0) {
-    isDrawing = false;
-    endStroke();
+    if(mouseOnCanvas && isDrawing) {
+      isDrawing = false;
+      endStroke();
+    }
   }
 });
 
 canvas.addEventListener("mousemove", (event) => {
-  if (isDrawing) {
-    drawStroke(event);
+  if(mouseOnCanvas) {
+    if (isDrawing) {
+      drawStroke(event);
+    }
+  }
+});
+
+canvas.addEventListener('mouseenter', () => {
+  mouseOnCanvas = true;
+});
+
+canvas.addEventListener('mouseleave', () => {
+  mouseOnCanvas = false;
+  if(isDrawing) {
+    isDrawing = false;
+    endStroke();
   }
 });
