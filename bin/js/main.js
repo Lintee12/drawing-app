@@ -308,19 +308,16 @@ function clearCanvas(color, alpha) {
   //redraw only non-erased content on top of the new background
   drawnContent.forEach(shape => {
     if (!shape.isErase) {
-      ctx.lineWidth = shape.size;
-      ctx.strokeStyle = shape.color;
+      ctx.fillStyle = shape.color;
       if (shape.type === 'circle') {
         ctx.beginPath();
         ctx.arc(shape.x, shape.y, shape.size / 2, 0, Math.PI * 2);
-        ctx.stroke();
+        ctx.fill();
       } else if (shape.type === 'square') {
-        ctx.beginPath();
-        ctx.rect(shape.x - shape.size / 2, shape.y - shape.size / 2, shape.size, shape.size);
-        ctx.stroke();
+        ctx.fillRect(shape.x - shape.size / 2, shape.y - shape.size / 2, shape.size, shape.size);
       }
     }
-  });  
+  });
 }
 
 const initCanvas = () => {
@@ -344,7 +341,6 @@ function startStroke(event) {
     ctx.strokeStyle = `rgba(0, 0, 0, ${mainAlphaSize})`; //transparent
   }
   const { x, y } = getMousePos(canvas, event);
-  storeStroke(x, y, ctx.lineWidth, ctx.strokeStyle, brushType, !draw); // Store the start of the stroke
   if (brushType === 0) {
     ctx.beginPath();
     ctx.arc(x, y, ctx.lineWidth / 2, 0, Math.PI * 2); //initial circle
@@ -366,7 +362,6 @@ function drawStroke(event) {
   for (let i = 0; i < dist; i += 5) {
     const newX = prevX + Math.cos(angle) * i;
     const newY = prevY + Math.sin(angle) * i;
-    storeStroke(newX, newY, ctx.lineWidth, ctx.strokeStyle, brushType, !draw);
     if (brushType === 0) { //circle
       ctx.beginPath();
       ctx.arc(newX, newY, ctx.lineWidth / 2, 0, Math.PI * 2);
@@ -383,7 +378,6 @@ function drawStroke(event) {
 }
 
 function endStroke() {
-  storeStroke(prevX, prevY, ctx.lineWidth, ctx.strokeStyle, brushType, !draw);
   console.log("stroke end")
 }
 
