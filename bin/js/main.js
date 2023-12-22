@@ -91,6 +91,7 @@ const handleHeaderSubAction = (action) => {
       window.location.reload();
       break;
     case 'import':
+      importImage();
       console.log("import");
       break;
     case 'save':
@@ -384,7 +385,7 @@ function updateDisplay(event) {
     spawnCircle(mousePos.x, mousePos.y, drawSize);
   } 
   else {
-    ctx.fillStyle = `rgba(255, 255, 0, ${mainAlphaSize})`;
+    ctx.fillStyle = `rgba(255, 255, 255, ${mainAlphaSize})`;
     spawnCircle(mousePos.x, mousePos.y, drawSize);
   } 
 }
