@@ -17,7 +17,7 @@
         <script src="bin/js/config.js"></script>
         <link rel="stylesheet" type="text/css" href="bin/css/home.css">
     </head>
-    <body>
+    <body style="overflow: auto;">
         <header>
             <nav class="home-header-nav">
                 <ul class="home-header-list">
@@ -45,6 +45,14 @@
             }
             window.onload = () => {adjustHeader();}
             window.addEventListener('resize', adjustHeader);
+        </script>
+        <script>
+            if (
+            (window.location.href.endsWith('/') || window.location.href.endsWith('/index.html')) &&
+            !window.location.href.endsWith('/index.html')
+            ) {
+            window.location.href = 'index.html'; // Redirect to index.html
+            }
         </script>
     </body>
 </html>

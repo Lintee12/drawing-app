@@ -349,7 +349,7 @@ ctx.canvas.willReadFrequently = true;
 ctx.imageSmoothingEnabled = true;
 ctx.imageSmoothingQuality = "high";
 
-const devicePixelRatio = window.devicePixelRatio || 1;
+/* const devicePixelRatio = window.devicePixelRatio || 1;
 const backingStoreRatio = ctx.webkitBackingStorePixelRatio ||
                           ctx.mozBackingStorePixelRatio ||
                           ctx.msBackingStorePixelRatio ||
@@ -362,7 +362,7 @@ canvas.height = canvas.clientHeight * ratio;
 gridCanvas.width = canvas.width;
 gridCanvas.height = canvas.height;
 ctx.scale(ratio, ratio);
-ctxGrid.scale(ratio, ratio);
+ctxGrid.scale(ratio, ratio); */
 
 function getMousePos(canvas, event) {
   const rect = canvas.getBoundingClientRect();
