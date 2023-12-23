@@ -119,8 +119,11 @@ document.addEventListener("DOMContentLoaded", function() {
             contextMenu.style.left = `${event.clientX}px`;
 
             contextMenu.querySelector('.delete-option').addEventListener('click', () => {
-                deleteProjectFromStorage(projectName, projectElement);
                 contextMenu.remove();
+                var confirmResult = confirm(`Are you sure you would like to delete ${projectName}?`)
+                if(confirmResult) {
+                    deleteProjectFromStorage(projectName, projectElement);
+                }
             });
 
             //Close the context menu when the mouse leaves it

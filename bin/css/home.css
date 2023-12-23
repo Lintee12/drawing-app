@@ -77,6 +77,6 @@ h1 {
     width: 140px !important;
 }
 
-.context-menu:hover {
-    transform: scale(1.2);
+.delete-option:hover {
+    background-color: rgb(56, 53, 255);
 }
