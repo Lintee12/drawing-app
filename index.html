@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Paint App</title>
+        <title>Paint App | Home</title>
         <meta name="description" content="a small painting app i made">
         <meta http-equiv="X-UA-Compatible" content="IE=7">
         <meta name="og:title" content="Paint app">
@@ -12,130 +12,38 @@
         <link rel="shortcut icon" type="image/x-icon" href="favicon.ico?">
         <link rel="stylesheet" type="text/css" href="./bin/css/styles.css">
         <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
-        <script src="./bin/js/utils.js"></script>
-        <script src="./bin/js/main.js" defer></script>
-        <script src="./bin/js/pageInteractions.js" defer></script>
-        <script src="./bin/js/undo.js" defer></script>
+        <script src="/bin/js/home.js" defer></script>
+        <script src="bin/js/projectManager.js"></script>
+        <script src="bin/js/config.js"></script>
+        <link rel="stylesheet" type="text/css" href="bin/css/home.css">
     </head>
-    <body id="scrollableContent" style="overflow: hidden;">
+    <body>
         <header>
-            <nav>
-                <ul class="header-list">
-                    <li class="header-list-item">
-                        <button class="header-action-button" aria-label="file" onclick="handleHeaderAction('file')">File</button>
-                        <ul class="dropdown-menu" id="file-menu" style="display: none;">
-                            <li class="dropdown-item">
-                                <button class="header-action-button dropdown-button" onclick="handleHeaderSubAction('new-file')">New File</button>
-                            </li>
-                            <li class="dropdown-item">
-                                <button class="header-action-button dropdown-button" onclick="handleHeaderSubAction('import')">Import</button>
-                            </li>
-                            <li class="dropdown-item">
-                                <button class="header-action-button dropdown-button" onclick="handleHeaderSubAction('save')">Save</button>
-                            </li>
-                            <li class="dropdown-item">
-                                <button class="header-action-button dropdown-button" onclick="handleHeaderSubAction('save-as')">Save As...</button>
-                            </li>
-                            <li class="dropdown-item">
-                                <button class="header-action-button dropdown-button" onclick="handleHeaderSubAction('exit')">Exit</button>
-                            </li>
-                        </ul>
+            <nav class="home-header-nav">
+                <ul class="home-header-list">
+                    <li class="home-header-list-item">
+                        <h1>Projects</h1>
                     </li>
-                    <li class="header-list-item">
-                        <button class="header-action-button" aria-label="edit" onclick="handleHeaderAction('edit')">Edit</button>
-                        <ul class="dropdown-menu" id="edit-menu" style="display: none;">
-                            <li class="dropdown-item">
-                                <button class="header-action-button dropdown-button" onclick="handleHeaderSubAction('undo')">Undo</button>
-                            </li>
-                            <li class="dropdown-item">
-                                <button class="header-action-button dropdown-button" onclick="handleHeaderSubAction('redo')">Redo</button>
-                            </li>
-                        </ul>
-                    </li>
-                    <li class="header-list-item">
-                        <button class="header-action-button" aria-label="view" onclick="handleHeaderAction('view')">View</button>
-                        <ul class="dropdown-menu" id="view-menu" style="display: none;">
-                            <li class="dropdown-item">
-                                <button class="header-action-button dropdown-button" onclick="handleHeaderSubAction('zoom-in')" onmousedown="zoomIn()" onmouseup="stopZoom()">Zoom In</button>
-                            </li>
-                            <li class="dropdown-item">
-                                <button class="header-action-button dropdown-button" onclick="handleHeaderSubAction('zoom-out')" onmousedown="zoomOut()" onmouseup="stopZoom()">Zoom Out</button>
-                            </li>
-                        </ul>
+                    <li class="home-header-list-item full-right">
+                        <button class="header-action-button home-header-button" id="draw" data-active="true" data-group="mode" aria-label="draw mode" onclick="createProject()">New Project</button>
                     </li>
                 </ul>
             </nav>
-            <div class="container-tools">
-                <div class="tool-section">
-                    <span class="tool-label">Mode</span>
-                    <div class="tool-section-row">
-                        <button class="paint-button" id="draw" data-active="true" data-group="mode" aria-label="draw mode" onclick="handleButtonInput(this)">Draw</button>
-                        <button class="paint-button" id="erase" data-active="false" data-group="mode" aria-label="erase mode" onclick="handleButtonInput(this)">Erase</button>
-                    </div>
-                </div>
-                <div class="tool-section">
-                    <span class="tool-label">Brush size</span>
-                    <div class="tool-section-row" style="gap: 0px;">
-                        <input class="paint-slider" id="draw-size" aria-label="draw size" aria-valuemin="1" aria-valuemax="255" type="range" value="1" min="1" max="255"/>
-                        <span class="paint-value" aria-label="draw size value" id="draw-size-bind">1</span>
-                    </div>
-                </div>
-                <div class="tool-section">
-                    <span class="tool-label">Brush Type</span>
-                    <div class="tool-section-row">
-                        <button class="paint-button" id="circle-type" data-active="true" data-group="brush-type" aria-label="circle brush type" onclick="handleButtonInput(this)">Circle</button>
-                        <button class="paint-button" id="square-type" data-active="false" data-group="brush-type" aria-label="square brush type" onclick="handleButtonInput(this)">Square</button>
-                    </div>
-                </div>
-                <div class="tool-section">
-                    <span class="tool-label">Brush color</span>
-                    <div class="tool-section-row" style="width: 100%;">
-                        <input class="paint-color" data-action="draw-color" aria-label="brush color" id="draw-color" type="color" oninput="handleColorInput(this)"/>
-                    </div>
-                </div>
-                <div class="tool-section">
-                    <span class="tool-label">Canvas size</span>
-                    <div class="tool-section-row">
-                        <span class="tool-hint">W:</span>
-                        <input class="paint-number-medium" aria-label="canvas width" data-action="canvas-size" id="canvas-size-width" type="number" value="0" min="0" max="7680" oninput="handleNumberInput(this)" onchange="submitNumberInput(this)"/>
-                        <span class="tool-hint">H:</span>
-                        <input class="paint-number-medium" aria-label="canvas height" data-action="canvas-size" id="canvas-size-height" type="number" value="0" min="0" max="4320" oninput="handleNumberInput(this)" onchange="submitNumberInput(this)"/>
-                    </div>
-                </div>
-                <div class="tool-section">
-                    <span class="tool-label">Grid size</span>
-                    <div class="tool-section-row">
-                        <input class="paint-number-medium" aria-label="grid size" data-action="grid-size" id="grid-size" type="number" value="16" min="1" max="7680" oninput="handleNumberInput(this)"/>
-                        <span class="tool-hint">px</span>
-                    </div>
-                </div>
-                <p class="tool-section tool-p"><span title="alert" role="alert" id="warning" aria-label="warning"></span>Changing canvas size will delete any imported images!</p>
-            </div>
         </header>
-        <div class="container-main">
-            <div class="container-paint" id="scrollableDiv">
-                <div class="canvas-zoom" id="scrollableContent">
-                    <canvas width="512" height="512" class="grid-canvas" id="grid-canvas" aria-label="canvas"></canvas>
-                    <canvas width="512" height="512" class="canvas" id="canvas" aria-label="canvas"></canvas>
-                </div>
-                <div class="zoom-controls" style="user-select: none;">
-                    <div class="zoom-value" style="width: fit-content;">000%</div>
-                    <button class="paint-button zoom-button" title="Zoom in" style="width: 40px;" onmousedown="zoomIn()" onmouseup="stopZoom()" onmouseleave="stopZoom()">+</button>
-                    <button class="paint-button zoom-button" title="Zoom out" style="width: 40px;" onmousedown="zoomOut()" onmouseup="stopZoom()" onmouseleave="stopZoom()">-</button>
-                </div>
-            </div>
-        </div>
+        <main>
+            <div class="projects-container"></div>
+        </main>
         <script>
             function adjustHeader() {
                 const headerHeight = document.querySelector('header').offsetHeight;
 
-                const containerMain = document.querySelector('.container-paint');
+                const main = document.querySelector('main');
 
                 const windowHeight = window.innerHeight;
                 const calculatedHeight = windowHeight - headerHeight;
-                containerMain.style.top = `${headerHeight}px`;
-                containerMain.style.height = `${calculatedHeight}px`;
+                main.style.marginTop = `${headerHeight}px`;
             }
+            window.onload = () => {adjustHeader();}
             window.addEventListener('resize', adjustHeader);
         </script>
     </body>

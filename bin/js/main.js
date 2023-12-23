@@ -7,8 +7,6 @@ const drawSizeSlider = document.getElementById("draw-size");
 const drawSizeBind = document.getElementById("draw-size-bind");
 
 const canvas = document.getElementById("canvas");
-//const defaultCanvas = [window.screen.availWidth, window.screen.availHeight];
-const defaultCanvas = [512, 512];
 
 const gridCanvas = document.getElementById('grid-canvas');
 let gridSize = 16;
@@ -22,17 +20,14 @@ let mainAlphaSize = 255;
 let blobs = 1;
 let isDrawing;
 
+const appHome = "index.html";
+
 //load values from storage
 window.onload = () => {
-    canvas.setAttribute("style", `width:${defaultCanvas[0]}px; height:${defaultCanvas[1]}px;`)
-    gridCanvas.setAttribute("style", `width:${defaultCanvas[0]}px; height:${defaultCanvas[1]}px;`)
-    document.getElementById("canvas-size-width").value = defaultCanvas[0];
-    document.getElementById("canvas-size-height").value = defaultCanvas[1];
-    canvas.width = defaultCanvas[0];
-    canvas.height = defaultCanvas[1];
-    gridCanvas.width = defaultCanvas[0];
-    gridCanvas.height = defaultCanvas[1];
-
+    if(currentProject.canvasSizeX == null && currentProject.canvasSizeY == null) {
+      setCanvasSize(defaultCanvas[0], defaultCanvas[1]);
+    }
+    
     if(localStorage.getItem("drawSize") == null) localStorage.setItem("drawSize", 18)
     drawSizeSlider.value = localStorage.getItem("drawSize");
     drawSizeBind.innerHTML = drawSizeSlider.value;
@@ -98,13 +93,13 @@ const handleHeaderSubAction = (action) => {
       console.log("import");
       break;
     case 'save':
-      saveCanvasAsImage();
+      saveProject();
       break;
     case 'save-as':
       saveCanvasAsImage();
       break;
     case 'exit':
-      closeWindow();
+      handleSaveExit();
       break;
     case 'undo':
       undo();
@@ -123,15 +118,26 @@ const handleHeaderSubAction = (action) => {
   }
 }
 
-function closeWindow() {
-  let new_window = open(location, '_self');
-  new_window.close();
-  return false;
+const handleSaveExit = async () => {
+  await saveProject();
+  window.location.href = appHome;
 }
 
 const hideMenu = (event) => {
   event.target.style.display = 'none';
 }
+
+function setCanvasSize(width, height) {
+  canvas.setAttribute("style", `width:${width}px; height:${height}px;`);
+  gridCanvas.setAttribute("style", `width:${width}px; height:${height}px;`);
+  document.getElementById("canvas-size-width").value = width;
+  document.getElementById("canvas-size-height").value = height;
+  canvas.width = width;
+  canvas.height = height;
+  gridCanvas.width = width;
+  gridCanvas.height = height;
+}
+
 
 /* hotkeys */
 document.addEventListener('keydown', function(event) {
@@ -140,7 +146,6 @@ document.addEventListener('keydown', function(event) {
     undo();
   }
 });
-
 
 document.addEventListener('keydown', function(event) {
   if ((event.ctrlKey || event.metaKey) && event.key === 'y') {
@@ -167,6 +172,51 @@ function saveCanvasAsImage() {
   link.href = dataURL;
 
   link.click();
+}
+
+const saveProject = async () => {
+  let pixelRatio = canvas.width * canvas.height;
+  
+  const tempCanvas = document.createElement('canvas');
+  const tempCtx = tempCanvas.getContext('2d');
+
+  const ogWidth = canvas.width;
+  const ogHeight = canvas.height;
+
+  const newWidth = canvas.width / 4;
+  const newHeight = canvas.height / 4;
+
+  tempCanvas.width = newWidth;
+  tempCanvas.height = newHeight;
+
+  tempCtx.drawImage(canvas, 0, 0, newWidth, newHeight);
+
+  let base64Image;
+
+  if(canvas.width > 128 && canvas.height > 128) {
+    base64Image = tempCanvas.toDataURL('image/png', 0.1);
+  }
+  else if (pixelRatio > 16384) {
+    base64Image = tempCanvas.toDataURL('image/png', 0.1);
+  }
+  else {
+    base64Image = canvas.toDataURL('image/png', 0.1);
+  }
+
+  console.log(`Now saving: ${sessionStorage.getItem("currentProjectName")}`);
+  
+  currentProject = new Project(
+    sessionStorage.getItem("currentProjectName"),
+    base64Image,
+    new Date().toLocaleDateString(),
+    ogWidth,
+    ogHeight,
+    gridSize,
+    drawnContent
+  );
+
+  saveProjectToStorage(sessionStorage.getItem("currentProjectName"));
+  console.log('Project saved!');
 }
 
 //draw size slider
@@ -285,10 +335,19 @@ colorInputs.forEach(input => {
 const ctx = canvas.getContext("2d");
 const ctxGrid = gridCanvas.getContext('2d');
 
-let drawnContent = [];
+//load drawn content
+let drawnContent = []
+const foundProjectIndex = projects.findIndex(project => project.name === sessionStorage.getItem('currentProjectName'));
+currentProject = projects[foundProjectIndex];
+setCanvasSize(currentProject.canvasSizeX, currentProject.canvasSizeY);
+if(currentProject.content.length > 0) {
+  drawnContent = currentProject.content;
+}
+//load drawn content
 
 ctx.canvas.willReadFrequently = true;
 ctx.imageSmoothingEnabled = true;
+ctx.imageSmoothingQuality = "high";
 
 const devicePixelRatio = window.devicePixelRatio || 1;
 const backingStoreRatio = ctx.webkitBackingStorePixelRatio ||
@@ -335,7 +394,7 @@ function redrawContent() {
   drawnContent.forEach(strokeData => {
     const { brushType, drawSize, strokeStyle, capType, joinType, GCO, path } = strokeData;
 
-    ctx.lineWidth = clamp(drawSize / 2, 0, 255);
+    ctx.lineWidth = _.clamp(drawSize / 2, 0, 255);
     ctx.strokeStyle = strokeStyle;
     ctx.lineCap = capType;
     ctx.lineJoin = joinType;
@@ -376,7 +435,7 @@ let currentStroke = {
 
 function startStroke(event) {
   const { x, y } = getMousePos(canvas, event);
-  ctx.lineWidth = clamp(drawSize / 2, 1, 255);
+  ctx.lineWidth = _.clamp(drawSize / 2, 1, 255);
   if(draw) { //draw mode
     ctx.globalCompositeOperation = 'source-over';
     ctx.strokeStyle = `rgb(${drawColor[0]}, ${drawColor[1]}, ${drawColor[2]})`;

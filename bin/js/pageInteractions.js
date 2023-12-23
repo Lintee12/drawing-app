@@ -96,9 +96,9 @@ function stopZoom() {
 }
 
 function applyZoom() {
-    canvas.style.transform = `scale(${clamp(scaleFactor, 0.1, 100)})`;
-    gridCanvas.style.transform = `scale(${clamp(scaleFactor, 0.1, 100)})`;
-	document.getElementsByClassName("zoom-value")[0].innerHTML = `${clamp(Math.round(scaleFactor * 100), 10, 999999)}%`;
+    canvas.style.transform = `scale(${_.clamp(scaleFactor, 0.1, 100)})`;
+    gridCanvas.style.transform = `scale(${_.clamp(scaleFactor, 0.1, 100)})`;
+	document.getElementsByClassName("zoom-value")[0].innerHTML = `${_.clamp(Math.round(scaleFactor * 100), 10, 999999)}%`;
 }
-document.getElementsByClassName("zoom-value")[0].innerHTML = `${clamp(Math.round(scaleFactor * 100), 10, 999999)}%`;
+document.getElementsByClassName("zoom-value")[0].innerHTML = `${_.clamp(Math.round(scaleFactor * 100), 10, 999999)}%`;
 /* end canvas zoom */

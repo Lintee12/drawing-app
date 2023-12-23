@@ -1,0 +1,1 @@
+const defaultCanvas = [512, 512];

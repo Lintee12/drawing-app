@@ -1,0 +1,82 @@
+.home-header-nav {
+    background-color: rgb(56, 53, 255);
+    padding: 20px;
+    width: 100%;
+}
+
+.home-header-list {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.home-header-list-item {
+    list-style: none;
+}
+
+.full-right {
+    margin-left: auto;
+}
+
+h1 {
+    font-size: 2rem;
+}
+
+.home-header-button {
+    font-size: 1.5rem;
+
+}
+
+.projects-container {
+    padding: 20px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.project {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    background: rgb(105, 105, 105);
+    color: white;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background 1s ease;
+    user-select: none;
+    width: 320px; /* Set the width of the container */
+    height: 180px; /* Set the height of the container */
+}
+
+.project:hover {
+    background: rgb(56, 53, 255);
+}
+
+.project-preview {
+    overflow: hidden; /* Ensure the image doesn't overflow its container */
+    object-fit: contain;
+}
+
+.project-name {
+    font-size: 2rem;
+}
+
+.context-menu {
+    position: fixed;
+    background: rgb(0, 0, 0);
+    cursor: pointer;
+    color: white;
+    padding: 5px;
+    font-size: 1.5rem;
+    border-radius: 10px;
+    transition: all 1s;
+    display: flex;
+    flex-direction: row;
+    width: 140px !important;
+}
+
+.context-menu:hover {
+    transform: scale(1.2);
+}
