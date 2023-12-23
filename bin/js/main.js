@@ -31,11 +31,11 @@ window.onload = () => {
     if(localStorage.getItem("drawSize") == null) localStorage.setItem("drawSize", 18)
     drawSizeSlider.value = localStorage.getItem("drawSize");
     drawSizeBind.innerHTML = drawSizeSlider.value;
+    drawSize = localStorage.getItem("drawSize");
 
     if(localStorage.getItem("drawColor") == null) {localStorage.setItem("drawColor", '#000000');}
     document.getElementById("draw-color").value = localStorage.getItem("drawColor");
     drawColor = hexTorgb(localStorage.getItem("drawColor"));
-    console.log(drawColor);
 
     if(localStorage.getItem("draw") == null) localStorage.setItem("draw", true);
     if(localStorage.getItem("draw") == 'true') handleButtonInput(document.getElementById("draw"));
@@ -168,7 +168,7 @@ function saveCanvasAsImage() {
   const dataURL = canvas.toDataURL('image/png');
 
   const link = document.createElement('a');
-  link.download = 'image.png';
+  link.download = currentProject.name;
   link.href = dataURL;
 
   link.click();

@@ -44,14 +44,18 @@ h1 {
     color: white;
     border-radius: 20px;
     cursor: pointer;
-    transition: background 1s ease;
+    transition: all 1s ease;
     user-select: none;
     width: 320px; /* Set the width of the container */
     height: 180px; /* Set the height of the container */
+    background-repeat: no-repeat;
+    background-size: cover;
+    border: 3px solid gray;
+    background-position: center;
 }
 
 .project:hover {
-    background: rgb(56, 53, 255);
+    border-color: #746581;
 }
 
 .project-preview {

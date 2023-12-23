@@ -56,20 +56,21 @@ document.addEventListener("DOMContentLoaded", function() {
             projects.forEach(project => {
                 const element = document.createElement('div');
                 const date = document.createElement('span');
-                const img = document.createElement('img');
+                //const img = document.createElement('img');
                 const name = document.createElement('span');
                 element.classList.add('project');
                 element.dataset.project = project.name;
+                element.style.backgroundImage = `url(${project.preview})`
                 date.classList.add('project-date');
                 date.innerText = project.lastSaveDate;
-                img.classList.add('project-preview');
-                img.alt = 'project image'
-                img.src = project.preview;
-                img.draggable = false;
+                //img.classList.add('project-preview');
+                //img.alt = 'project image'
+                //img.src = project.preview;
+                //img.draggable = false;
                 name.classList.add('project-name');
                 name.innerText = project.name;
                 element.appendChild(date);
-                element.appendChild(img);
+                //element.appendChild(img);
                 element.appendChild(name);
                 container.insertBefore(element, container.firstChild);
             });
