@@ -507,6 +507,7 @@ canvas.addEventListener("mouseup", (event) => {
     if(mouseOnCanvas && isDrawing) {
       isDrawing = false;
       endStroke();
+      initCanvas();
     }
   }
 });
@@ -528,5 +529,6 @@ canvas.addEventListener('mouseleave', () => {
   if(isDrawing) {
     isDrawing = false;
     endStroke();
+    initCanvas();
   }
 });
