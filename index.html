@@ -15,6 +15,7 @@
         <script src="bin/js/home.js" defer></script>
         <script src="bin/js/projectManager.js"></script>
         <script src="bin/js/config.js"></script>
+        <script src="bin/js/debug.js" defer></script>
         <link rel="stylesheet" type="text/css" href="bin/css/home.css">
     </head>
     <body style="overflow: auto;">
@@ -43,7 +44,7 @@
                 const calculatedHeight = windowHeight - headerHeight;
                 main.style.marginTop = `${headerHeight}px`;
             }
-            window.onload = () => {adjustHeader();}
+            window.onload = () => {adjustHeader();logStorage();}
             window.addEventListener('resize', adjustHeader);
         </script>
         <script>

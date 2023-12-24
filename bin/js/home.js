@@ -2,7 +2,7 @@ const appMain = 'project.html';
 
 const createProject = () => {
     const input = prompt("Please enter a project name...");
-    
+
     if (input.trim() !== '' && input !== null) {
       const trimmedInput = input.trim();
   
@@ -10,11 +10,13 @@ const createProject = () => {
         newProject(trimmedInput);
         const encodedInput = encodeURIComponent(trimmedInput);
         window.location.href = `${appMain}?name=${encodedInput}`;
-      } else {
+      } 
+      else {
         console.log('Name is already in use...');
       }
-    } else {
+    } 
+    else {
       console.log('Invalid name');
     }
-  };
+};
   
